@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Temporal Boundary Toy App</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        line-height: 1.5;
+      }
+
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      .card {
+        border: 1px solid #9994;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      h1, h2 {
+        margin-top: 0;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        background: #9993;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: currentColor;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 8px;
+        border-top: 1px solid #9993;
+        vertical-align: top;
+      }
+
+      button {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #9995;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .stack > * + * {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Temporal Boundary Toy App</h1>
+      <p>
+        This example uses a shifting daily boundary instead of midnight.
+      </p>
+
+      <div class="card stack">
+        <h2>Current status</h2>
+        <div><strong>Now:</strong> <span id="now" class="mono"></span></div>
+        <div><strong>Window start:</strong> <span id="window-start" class="mono"></span></div>
+        <div><strong>Window end:</strong> <span id="window-end" class="mono"></span></div>
+        <div><strong>Window ID:</strong> <span id="window-id" class="mono"></span></div>
+        <div><strong>Progress:</strong> <span id="progress-text" class="mono"></span></div>
+        <div class="progress-track" aria-hidden="true">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <button id="refresh-button" type="button">Refresh now</button>
+      </div>
+
+      <div class="card stack">
+        <h2>Sample events grouped by operational window</h2>
+        <p>
+          These sample timestamps show how events are grouped by the active shifting window.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Window</th>
+              <th>Events</th>
+            </tr>
+          </thead>
+          <tbody id="grouped-events"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        DailyBoundaryStrategy,
+        getActiveWindow,
+        getWindowProgress,
+        groupByWindow,
+      } from './lib/temporal-boundary-library.js';
+
+      const mockBoundaries = {
+  "2026-04-17": "18:58",
+  "2026-04-18": "18:59",
+  "2026-04-19": "19:00",
+  "2026-04-20": "19:01",
+      };
+
+      function formatKey(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function getBoundaryForDate(date) {
+        const key = formatKey(date);
+        const time = mockBoundaries[key];
+
+        if (!time) throw new Error(`Missing boundary for ${key}`);
+
+        const [h, m] = time.split(":").map(Number);
+        const result = new Date(date);
+        result.setHours(h, m, 0, 0);
+        return result;
+      }
+
+      const strategy = new DailyBoundaryStrategy({
+        getBoundaryForDate,
+        label: "shifting-day",
+      });
+
+      const sampleEvents = [
+        { id: 'evt-1', timestamp: '2026-04-18T08:15:00', label: 'Night shift wrap-up' },
+        { id: 'evt-2', timestamp: '2026-04-18T08:50:00', label: 'Handover note filed' },
+        { id: 'evt-3', timestamp: '2026-04-18T09:10:00', label: 'Morning shift starts' },
+        { id: 'evt-4', timestamp: '2026-04-18T12:30:00', label: 'Inventory count' },
+        { id: 'evt-5', timestamp: '2026-04-19T07:40:00', label: 'Overnight inspection' },
+        { id: 'evt-6', timestamp: '2026-04-19T09:05:00', label: 'New operational day begins' },
+      ];
+
+      const nowEl = document.getElementById('now');
+      const windowStartEl = document.getElementById('window-start');
+      const windowEndEl = document.getElementById('window-end');
+      const windowIdEl = document.getElementById('window-id');
+      const progressTextEl = document.getElementById('progress-text');
+      const progressFillEl = document.getElementById('progress-fill');
+      const groupedEventsEl = document.getElementById('grouped-events');
+      const refreshButtonEl = document.getElementById('refresh-button');
+
+      function formatDateTime(value) {
+        return new Intl.DateTimeFormat(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }).format(value);
+      }
+
+      function renderCurrentWindow() {
+        const now = new Date();
+        const window = getActiveWindow(now, strategy);
+        const progress = getWindowProgress(now, window);
+
+        nowEl.textContent = formatDateTime(now);
+        windowStartEl.textContent = formatDateTime(window.start);
+        windowEndEl.textContent = formatDateTime(window.end);
+        windowIdEl.textContent =
+          `${formatDateTime(window.start)} → ${formatDateTime(window.end)}`;
+        progressTextEl.textContent = `${(progress * 100).toFixed(2)}%`;
+        progressFillEl.style.width = `${progress * 100}%`;
+      }
+
+      function renderGroupedEvents() {
+        const groups = groupByWindow(sampleEvents, (item) => item.timestamp, strategy);
+
+        groupedEventsEl.innerHTML = groups
+          .map(({ window, items }) => {
+            const eventLines = items
+              .map((item) => `${item.timestamp} — ${item.label}`)
+              .join('<br>');
+
+            return `
+              <tr>
+                <td class="mono">${formatDateTime(window.start)}<br>to<br>${formatDateTime(window.end)}</td>
+                <td class="mono">${eventLines}</td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      refreshButtonEl.addEventListener('click', renderCurrentWindow);
+
+      renderCurrentWindow();
+      renderGroupedEvents();
+      setInterval(renderCurrentWindow, 1000);
+    </script>
+  </body>
+</html>
