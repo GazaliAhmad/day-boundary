@@ -15,13 +15,12 @@ For v1, the library should stay focused on custom day boundaries. It should not 
 
 The working product statement is:
 
-> Temporal Boundary Library resolves custom operational day windows when the day does not start at midnight.
-
-Use [use-cases.md](C:/dev/Temporal-boundary-library/use-cases.md:1) as the filter for future additions. A feature should belong in the core library only when it supports repeated operational-boundary logic with meaningful consequences if wrong.
+> Day Boundary Library resolves custom operational day windows when the day does not start at midnight.
+Use [use-cases.md](./use-cases.md) as the filter for future additions. A feature should belong in the core library only when it supports repeated operational-boundary logic with meaningful consequences if wrong.
 
 ## Public API Stabilization
 
-Current exports in [lib/temporal-boundary-library.js](C:/dev/Temporal-boundary-library/lib/temporal-boundary-library.js:319):
+Current exports in [lib/day-boundary-library.js](./lib/day-boundary-library.js):
 
 - `BoundaryStrategy`
 - `FixedTimeBoundaryStrategy`
@@ -94,7 +93,7 @@ Once tests and API behavior are stable, the repo should include:
 
 ## Documentation Work
 
-After the API is stabilized, update [README.md](C:/dev/Temporal-boundary-library/README.md:1) so it clearly answers:
+After the API is stabilized, update [README.md](./README.md) so it clearly answers:
 
 - what problem the library solves
 - when to use it
@@ -108,7 +107,7 @@ After the API is stabilized, update [README.md](C:/dev/Temporal-boundary-library
 
 Core and packaging:
 
-- update [lib/temporal-boundary-library.js](C:/dev/Temporal-boundary-library/lib/temporal-boundary-library.js:1)
+- update [lib/day-boundary-library.js](./lib/day-boundary-library.js)
 - add `package.json`
 - add `test/fixed-time-boundary.test.js`
 - add `test/daily-boundary.test.js`
@@ -123,8 +122,8 @@ Examples:
 
 Project docs:
 
-- update [README.md](C:/dev/Temporal-boundary-library/README.md:1)
-- update [CHANGELOG.md](C:/dev/Temporal-boundary-library/CHANGELOG.md:1)
+- update [README.md](./README.md)
+- update [CHANGELOG.md](./CHANGELOG.md)
 
 ## Recommended Implementation Order
 
