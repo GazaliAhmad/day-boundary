@@ -1,24 +1,37 @@
 # Day Boundary Library
 
-A small JavaScript library for working with non-midnight day boundaries.
+Assign timestamps to operational days when your day does not start at midnight.
 
-This project is copyright-owned by Gazali Ahmad and may be used, distributed, or marketed by The Right Business Pte Ltd. See [IP-NOTICE.md](./IP-NOTICE.md).
+For example, with a 09:00 boundary, an event at 00:30 belongs to the previous operational day, not the new calendar date.
 
-Most systems assume a day starts at 00:00. This library lets you redefine that boundary, whether fixed (for example 09:00) or shifting based on a daily function.
+This library gives you a consistent way to:
+- resolve boundary windows
+- group records by operational day
+- handle fixed or date-shifting boundaries
+- model DST-safe behavior with explicit time zones (v2)
+
+Best for:
+- shift and rota systems
+- overnight operations
+- payroll and reporting pipelines
+- compliance and audit grouping logic
+
+Install:
+`npm install day-boundary`
 
 ## Why this exists
 
-Civil time is designed for coordination, not accuracy.
+Production systems still need deterministic day windows for grouping, reporting, and handover logic.
 
-In many real-world systems, the operational day does not start at midnight:
+Common cases:
 
 * shift-based work such as factories and logistics
 * overnight operations like healthcare or transport
 * systems where continuity matters more than calendar alignment
 
-If you keep midnight as your boundary, you end up with split records, broken aggregation, and scattered “previous day” logic.
+Keeping midnight as the boundary in these systems causes split records, broken aggregation, and scattered "previous day" logic.
 
-This library moves that concern into a single place: the time model.
+This library centralizes that boundary logic so the rest of your application stays consistent.
 
 ## Core idea
 
@@ -396,3 +409,7 @@ Avoid it when:
 This is not a date utility.
 
 It is a way to redefine what a day means, so the rest of your system does not have to.
+
+## Legal
+
+This project is copyright-owned by Gazali Ahmad, and The Right Business Pte Ltd is associated with the project by permission of the copyright owner. See [IP-NOTICE.md](./IP-NOTICE.md).

@@ -31,10 +31,14 @@
     "operational-day",
     "reporting"
   ],
-  "repository": {
+ "repository": {
     "type": "git",
-    "url": "."
+   "url": "git+https://github.com/GazaliAhmad/Temporal-boundary-library.git"
   },
+  "bugs": {
+    "url": "https://github.com/GazaliAhmad/Temporal-boundary-library/issues"
+  },
+  "homepage": "https://github.com/GazaliAhmad/Temporal-boundary-library#readme",
   "license": "MIT",
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1"

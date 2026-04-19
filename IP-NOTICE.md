@@ -10,7 +10,7 @@ Copyright notice:
 
 `Copyright (c) 2026 Gazali Ahmad`
 
-## Business usage permission
+## Business association permission
 
 `The Right Business Pte Ltd` is associated with this project by permission of the copyright owner.
 

@@ -29,6 +29,10 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - Reorganized browser demos into the `examples/` folder.
 - Set the package root export `day-boundary` to the v2 API and kept compatibility exports for `day-boundary/v1`, `day-boundary/v2`, and `day-boundary/shifts`.
 - Expanded the docs to distinguish legacy v1 from the main v2 path, document the polyfill/browser setup, and align install guidance with package dependencies.
+- Updated package metadata with `bugs`, `homepage`, and a strict npm-style repository URL (`git+https://... .git`).
+- Refined README opening copy for faster npm-page comprehension, including a direct problem statement and use-case bullets.
+- Reduced repeated wording in the early README sections and separated project/legal wording into a dedicated `Legal` section.
+- Updated `IP-NOTICE.md` heading text to `Business association permission` for wording consistency.
 
 ## [1.0.0] - 2026-04-19
 
