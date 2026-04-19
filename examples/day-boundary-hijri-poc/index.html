@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hijri Maghrib Boundary POC</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
+          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+        }
+      }
+    </script>
     <style>
       :root {
         color-scheme: light dark;
@@ -173,11 +181,13 @@
     </div>
 
     <script type="module">
+      import { Temporal } from '@js-temporal/polyfill';
       import {
         DailyBoundaryStrategy,
-        getActiveWindow,
+        getWindowForInstant,
+        getWindowForPlainDateTime,
         getWindowProgress,
-      } from './lib/temporal-boundary-library.js';
+      } from '../../lib/day-boundary-v2.js';
 
       const DATASET_TIMEZONE_LABEL = 'Asia/Singapore';
       const ONE_MINUTE = 60 * 1000;
@@ -282,17 +292,25 @@
         });
       }
 
-      function formatLocalDateKey(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+      function formatLocalDateKey(value) {
+        if (typeof value === 'string') return value;
+        if (value instanceof Date) {
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, '0');
+          const day = String(value.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+        if (value instanceof Temporal.PlainDate) {
+          return value.toString();
+        }
+        if (value instanceof Temporal.ZonedDateTime) {
+          return value.toPlainDate().toString();
+        }
+        return String(value);
       }
 
-      function addDays(date, count) {
-        const result = new Date(date.getTime());
-        result.setDate(result.getDate() + count);
-        return result;
+      function addDays(dateKey, count) {
+        return Temporal.PlainDate.from(dateKey).add({ days: count }).toString();
       }
 
       function createLocalDate(dateKey, hours = 0, minutes = 0) {
@@ -300,7 +318,7 @@
         return new Date(year, month - 1, day, hours, minutes, 0, 0);
       }
 
-      function createLocalDateTime(dateKey, timeValue) {
+      function createLocalDateTimeForDisplay(dateKey, timeValue) {
         const [hours, minutes] = timeValue.split(':').map(Number);
         return createLocalDate(dateKey, hours, minutes);
       }
@@ -322,6 +340,13 @@
       }
 
       function toDateTimeInputValue(date) {
+        if (date instanceof Temporal.ZonedDateTime) {
+          return [
+            date.toPlainDate().toString(),
+            `${String(date.hour).padStart(2, '0')}:${String(date.minute).padStart(2, '0')}`,
+          ].join('T');
+        }
+
         return [
           formatLocalDateKey(date),
           `${String(date.getHours()).padStart(2, '0')}:${String(
@@ -365,17 +390,17 @@
       }
 
       function getSyntheticBoundaryTime(dateKey) {
-        if (dateKey === formatLocalDateKey(addDays(createLocalDate(state.firstDateKey), -1))) {
+        if (dateKey === addDays(state.firstDateKey, -1)) {
           return state.prayerByDate.get(state.firstDateKey).Maghrib;
         }
-        if (dateKey === formatLocalDateKey(addDays(createLocalDate(state.lastDateKey), 1))) {
+        if (dateKey === addDays(state.lastDateKey, 1)) {
           return state.prayerByDate.get(state.lastDateKey).Maghrib;
         }
         return '';
       }
 
       function getBoundaryForDate(date) {
-        const dateKey = formatLocalDateKey(date);
+        const dateKey = date.toString();
         const prayerRow = state.prayerByDate.get(dateKey);
         const maghribTime = prayerRow?.Maghrib || getSyntheticBoundaryTime(dateKey);
 
@@ -383,27 +408,39 @@
           throw new Error(`No Maghrib boundary found for ${dateKey}.`);
         }
 
-        return createLocalDateTime(dateKey, maghribTime);
+        const [hours, minutes] = maghribTime.split(':').map(Number);
+
+        return Temporal.ZonedDateTime.from({
+          timeZone: DATASET_TIMEZONE_LABEL,
+          year: date.year,
+          month: date.month,
+          day: date.day,
+          hour: hours,
+          minute: minutes,
+        });
       }
 
       function clampToSupportedTimestamp(candidate) {
-        const earliest = createLocalDate(state.firstDateKey, 0, 0);
-        const latestBoundary = createLocalDateTime(
-          state.lastDateKey,
-          state.prayerByDate.get(state.lastDateKey).Maghrib
-        );
-        const latest = new Date(latestBoundary.getTime() - ONE_MINUTE);
+        const earliest = Temporal.ZonedDateTime.from(
+          `${state.firstDateKey}T00:00:00+08:00[${DATASET_TIMEZONE_LABEL}]`
+        ).toInstant();
+        const latestBoundary = getBoundaryForDate(Temporal.PlainDate.from(state.lastDateKey)).toInstant();
+        const latest = latestBoundary.subtract({ minutes: 1 });
 
-        if (candidate < earliest) {
+        if (Temporal.Instant.compare(candidate, earliest) < 0) {
           state.supportedTodayMessage =
             'Current system date is earlier than the 2026 dataset, so the view was clamped to the first supported day.';
-          return createLocalDate(state.firstDateKey, NOON_HOUR, 0);
+          return Temporal.ZonedDateTime.from(
+            `${state.firstDateKey}T12:00:00+08:00[${DATASET_TIMEZONE_LABEL}]`
+          ).toInstant();
         }
 
-        if (candidate > latest) {
+        if (Temporal.Instant.compare(candidate, latest) > 0) {
           state.supportedTodayMessage =
             'Current system date is later than the 2026 dataset, so the view was clamped to the last supported day.';
-          return createLocalDate(state.lastDateKey, NOON_HOUR, 0);
+          return Temporal.ZonedDateTime.from(
+            `${state.lastDateKey}T12:00:00+08:00[${DATASET_TIMEZONE_LABEL}]`
+          ).toInstant();
         }
 
         state.supportedTodayMessage = '';
@@ -411,15 +448,15 @@
       }
 
       function getLabelDateForWindow(window) {
-        return formatLocalDateKey(window.end);
+        return window.end.toPlainDate().toString();
       }
 
       function getTodayReferenceTimestamp() {
-        return clampToSupportedTimestamp(new Date());
+        return clampToSupportedTimestamp(Temporal.Now.instant());
       }
 
       function getResolvedState(referenceTimestamp) {
-        const window = getActiveWindow(referenceTimestamp, state.strategy);
+        const window = getWindowForInstant(referenceTimestamp, state.strategy);
         const labelDateKey = getLabelDateForWindow(window);
         const hijriRecord = state.hijriByDate.get(labelDateKey);
 
@@ -451,7 +488,7 @@
 
       function getTahajjudWindow(labelDateKey) {
         const prayerRow = state.prayerByDate.get(labelDateKey);
-        const nextDateKey = formatLocalDateKey(addDays(createLocalDate(labelDateKey), 1));
+        const nextDateKey = addDays(labelDateKey, 1);
         const nextPrayerRow = state.prayerByDate.get(nextDateKey);
 
         if (!prayerRow) {
@@ -462,8 +499,8 @@
           return null;
         }
 
-        const nightStart = createLocalDateTime(labelDateKey, prayerRow.Maghrib);
-        const nightEnd = createLocalDateTime(nextDateKey, nextPrayerRow.Subuh);
+        const nightStart = createLocalDateTimeForDisplay(labelDateKey, prayerRow.Maghrib);
+        const nightEnd = createLocalDateTimeForDisplay(nextDateKey, nextPrayerRow.Subuh);
         const nightDuration = nightEnd.getTime() - nightStart.getTime();
 
         if (nightDuration <= 0) {
@@ -502,13 +539,15 @@
 
         const progress = getWindowProgress(referenceTimestamp, window);
         const civilDate = createLocalDate(labelDateKey, NOON_HOUR, 0);
+        const selectedZonedDateTime = referenceTimestamp.toZonedDateTimeISO(DATASET_TIMEZONE_LABEL);
 
         detailsEl.hidden = false;
-        selectedTimestampEl.textContent = formatDateTime(referenceTimestamp);
+        selectedTimestampEl.textContent = formatDateTime(new Date(selectedZonedDateTime.epochMilliseconds));
         hijriDateEl.textContent = `${hijriRecord.hijri_day} ${hijriRecord.hijri_month} ${hijriRecord.hijri_year}`;
         civilDateEl.textContent = `${formatDateOnly(civilDate)} (${labelDateKey})`;
-        windowRangeEl.textContent = `${formatDateTime(window.start)} -> ${formatDateTime(window.end)}`;
-        boundaryTimeEl.textContent = formatDateTime(window.end);
+        windowRangeEl.textContent =
+          `${formatDateTime(new Date(window.start.epochMilliseconds))} -> ${formatDateTime(new Date(window.end.epochMilliseconds))}`;
+        boundaryTimeEl.textContent = formatDateTime(new Date(window.end.epochMilliseconds));
         progressTextEl.textContent = `${(progress * 100).toFixed(2)}%`;
         renderPrayerTimeline(labelDateKey);
         const tahajjudWindow = getTahajjudWindow(labelDateKey);
@@ -520,8 +559,8 @@
         eventTextEl.textContent = hijriRecord.event || 'None';
         coverageTextEl.textContent = `${state.firstDateKey} -> ${state.lastDateKey} (${DATASET_TIMEZONE_LABEL} prayer times)`;
 
-        dateInputEl.value = toDateInputValue(civilDate);
-        datetimeInputEl.value = toDateTimeInputValue(referenceTimestamp);
+        dateInputEl.value = labelDateKey;
+        datetimeInputEl.value = toDateTimeInputValue(selectedZonedDateTime);
 
         const statusParts = [
           `Resolved using the active Maghrib-based window for ${labelDateKey}.`,
@@ -550,11 +589,11 @@
       }
 
       function shiftWindow(direction) {
-        const currentWindow = getActiveWindow(state.referenceTimestamp, state.strategy);
+        const currentWindow = getWindowForInstant(state.referenceTimestamp, state.strategy);
         const candidate =
           direction < 0
-            ? new Date(currentWindow.start.getTime() - ONE_MINUTE)
-            : new Date(currentWindow.end.getTime() + ONE_MINUTE);
+            ? currentWindow.start.toInstant().subtract({ minutes: 1 })
+            : currentWindow.end.toInstant().add({ minutes: 1 });
         trySetReferenceTimestamp(
           candidate,
           direction < 0
@@ -565,8 +604,8 @@
 
       async function loadData() {
         const [prayerResponse, hijriResponse] = await Promise.all([
-          fetch('./data/MuslimPrayerTimetable2026.csv'),
-          fetch('./data/muis_hijri_calendar_2026.csv'),
+          fetch('../../data/MuslimPrayerTimetable2026.csv'),
+          fetch('../../data/muis_hijri_calendar_2026.csv'),
         ]);
 
         if (!prayerResponse.ok || !hijriResponse.ok) {
@@ -592,7 +631,10 @@
         const supportedDates = Array.from(state.prayerByDate.keys()).sort();
         state.firstDateKey = supportedDates[0];
         state.lastDateKey = supportedDates[supportedDates.length - 1];
-        state.strategy = new DailyBoundaryStrategy({ getBoundaryForDate });
+        state.strategy = new DailyBoundaryStrategy({
+          timeZone: DATASET_TIMEZONE_LABEL,
+          getBoundaryForDate,
+        });
         state.referenceTimestamp = getTodayReferenceTimestamp();
         state.isReady = true;
       }
@@ -621,7 +663,10 @@
         }
         state.supportedTodayMessage = '';
         trySetReferenceTimestamp(
-          parsed,
+          getWindowForPlainDateTime(
+            Temporal.PlainDateTime.from(`${dateInputEl.value}T12:00:00`),
+            state.strategy
+          ).start.toInstant().add({ hours: 1 }),
           'That civil date is outside the supported Hijri range in the loaded 2026 dataset.'
         );
       });
@@ -635,7 +680,14 @@
         }
         state.supportedTodayMessage = '';
         trySetReferenceTimestamp(
-          parsed,
+          Temporal.ZonedDateTime.from({
+            timeZone: DATASET_TIMEZONE_LABEL,
+            year: parsed.getFullYear(),
+            month: parsed.getMonth() + 1,
+            day: parsed.getDate(),
+            hour: parsed.getHours(),
+            minute: parsed.getMinutes(),
+          }).toInstant(),
           'That timestamp is outside the supported Hijri range in the loaded 2026 dataset.'
         );
       });

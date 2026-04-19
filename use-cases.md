@@ -1,185 +1,225 @@
-You’re not missing use cases. The issue is filtering **which ones actually justify your abstraction** versus ones that can live with a simple `if (time < cutoff)`.
+# Use Cases
 
-Here’s a grounded list, grouped by how strongly they need this model.
+This document describes where the library is strongest, where it is situational, and where it is unnecessary.
 
----
+The library is most valuable when all three are true:
 
-# Strong use cases (your library actually fits)
+1. the boundary is not midnight
+2. the boundary rule is reused across the system
+3. mistakes have operational, financial, or audit consequences
 
-These have **non-midnight boundaries + repeated logic + real consequences if wrong**
+If any one of those is missing, the library may be more abstraction than value.
 
-## 1. Shift-based operations
+## Strong Use Cases
 
-Factories, logistics, security, maintenance
+These are the best fits for the library because they combine non-midnight boundaries with repeated business logic and meaningful downside if the rule is wrong.
 
-* Day might start at 07:00 or 19:00
-* Overnight shifts belong to previous operational day
-* Reporting must align with shift, not calendar
+### 1. Shift-based operations
 
-Why your library matters:
+Examples:
 
-* prevents split shifts across days
-* clean grouping for reports and dashboards
+- factories
+- logistics
+- security
+- maintenance
 
----
+Why the library fits:
 
-## 2. Healthcare (hospital shifts)
+- a day may begin at `07:00`, `19:00`, or another operational cutoff
+- overnight work often belongs to the previous operational day, not the calendar day
+- reports, dashboards, and downstream analytics need a consistent boundary model
 
-* Nurse/doctor shifts cross midnight
-* Patient events must be grouped by shift, not calendar
+What the library provides:
 
-Why it matters:
+- clean grouping of activity into operational windows
+- removal of scattered "previous day" logic
+- stable reporting aligned to actual shift cycles
 
-* audit trails
-* medical accountability
-* handover consistency
+### 2. Healthcare and hospital shifts
 
-This is one of the few domains where mistakes are not cosmetic.
+Examples:
 
----
+- nurse shifts
+- doctor rotations
+- overnight wards
+- handover tracking
 
-## 3. Transport / ride-hailing (your Uber example)
+Why the library fits:
 
-* Weeks split into:
+- patient care activity often crosses midnight
+- operational ownership is usually defined by shift, not calendar date
+- auditability and continuity matter more than civil-day alignment
 
-  * Mon–Thu
-  * Fri–Sun
-* Earnings windows don’t follow calendar days
+Why this is high-stakes:
 
-Why your model fits:
+- handover mistakes are operationally serious
+- audit trails must reflect the intended shift window
+- staffing and accountability rules need consistent grouping
 
-* redefining “day” or “week” boundary is core logic
-* affects payouts, incentives, analytics
+Important DST note:
 
-This is actually one of your strongest real-world anchors.
+- on transition days, `8 actual elapsed hours` and `00:00 -> 08:00 local schedule` are not always the same
+- the library's v2 path plus companion shift helpers make that distinction explicit
 
----
+### 3. Transport and ride-hailing payout windows
 
-## 4. Continuous production / manufacturing
+Examples:
 
-* Production cycles run 24/7
-* Reporting aligns to operational cycles, not midnight
+- driver incentive windows
+- payout periods
+- weekly earnings rules
+- surge or operational cycles
 
-Why:
+Why the library fits:
 
-* efficiency tracking
-* downtime analysis
-* batch continuity
+- payout windows often do not follow civil-day or civil-week boundaries
+- boundary rules affect incentives, earnings summaries, and reconciliation
+- the same rule usually appears across reporting, calculations, and support tooling
 
----
+What the library provides:
 
-# Medium-strength use cases (situational)
+- a reusable boundary model instead of ad hoc date slicing
+- consistent grouping for earnings and incentive logic
+- clearer alignment between operational rules and stored data
 
-These use your model, but could also survive simpler logic.
+### 4. Continuous production and manufacturing
 
-## 5. Energy usage / utilities
+Examples:
 
-* Billing cycles may not align to midnight
-* peak/off-peak windows
+- 24/7 production lines
+- batch manufacturing
+- downtime reporting
+- throughput monitoring
 
-Your library helps if:
+Why the library fits:
 
-* windows shift dynamically
-* or are reused across systems
+- production cycles often run continuously across midnight
+- reporting windows are usually based on operational cycles, not civil dates
+- downtime and throughput analysis become distorted when midnight splits a working cycle
 
----
+What the library provides:
 
-## 6. Financial reporting windows
+- cycle-aligned reporting windows
+- cleaner batch continuity
+- less custom boundary logic in reporting layers
 
-* Trading or settlement cutoffs
-* End-of-day ≠ midnight
+## Medium-strength Use Cases
 
-But:
+These can benefit from the library, but in some systems a simpler implementation may still be enough.
 
-* often handled at database/query level
-* rarely abstracted into a reusable library
+### 5. Energy usage and utilities
 
----
+Examples:
 
-## 7. Event-based systems
+- billing cutoffs
+- peak and off-peak windows
+- operational demand windows
 
-* logging systems where “day” starts at deployment or trigger time
-* batch processing windows
+Why it can fit:
 
-Useful, but:
+- boundaries may not align to midnight
+- the same window logic may need to appear in billing, reporting, and monitoring
 
-* usually internal logic, not shared abstraction
+Why it is only medium-strength:
 
----
+- some systems can solve this with tariff-specific logic or query-layer rules
+- the library becomes more valuable only when the boundary model is reused broadly
 
-# Weak use cases (not worth your library)
+### 6. Financial reporting cutoffs
 
-These are traps.
+Examples:
 
-## 8. Personal productivity / habit tracking
+- settlement cutoffs
+- end-of-day processing
+- reporting windows
 
-* technically possible
-* practically overkill
+Why it can fit:
 
----
+- financial "day end" often does not mean midnight
+- cutoffs may need to be applied consistently across ingestion, reporting, and reconciliation
 
-## 9. Calendar apps / scheduling tools
+Why it is only medium-strength:
 
-* users expect midnight-based days
-* deviation creates confusion, not value
+- many financial systems already treat these rules as domain-specific platform logic
+- some teams may prefer to keep the logic in database or pipeline layers rather than a reusable boundary library
 
----
+### 7. Event and batch-processing systems
 
-## 10. General web apps
+Examples:
 
-* most apps do not need this
-* adding abstraction adds complexity, not clarity
+- deployment-day windows
+- trigger-based cycles
+- recurring processing windows
 
----
+Why it can fit:
 
-# The pattern behind all valid use cases
+- some systems define "day" by processing boundary rather than civil date
+- event grouping may depend on a reusable operational window
 
-The library is useful only when all three exist:
+Why it is only medium-strength:
 
-1. **Non-midnight boundary**
-2. **Repeated usage across the system**
-3. **Errors matter (financial, operational, or audit)**
+- in many implementations this remains internal platform logic
+- not every team needs a general-purpose reusable abstraction
 
-If any one is missing, the library is unnecessary.
+## Weak Use Cases
 
----
+These are usually poor fits for the library.
 
-# Where my idea actually sits
+### 8. Personal productivity and habit tracking
 
-Not:
+Why it is weak:
 
-> “a general time library”
+- technically possible, but usually unnecessary
+- most cases do not justify a dedicated boundary abstraction
 
-But:
+### 9. Calendar apps and scheduling tools
 
-> “a small utility for systems where the operational day is not midnight”
+Why it is weak:
 
-That’s narrower and real.
+- users generally expect midnight-based days
+- redefining the day boundary often creates confusion instead of clarity
 
----
+### 10. General web apps
 
-# The best use case for YOU
+Why it is weak:
 
-Given your background and what you’ve built:
+- many apps do not have operational day semantics at all
+- adding a boundary abstraction would increase complexity without clear payoff
 
-1. SGPrayer (already real)
-2. Ride-hailing earnings window (your Uber experience)
-3. Shift-based reporting dashboard
+## Best Case For The Library
 
-Teest if the library holds across those three:
+The best case for the library is not "general time handling."
 
-* it’s real
-* not just a thought experiment
+The best case is:
 
----
+> a reusable boundary engine for systems where the operational day is not midnight
 
-# Bottom line
+That framing is narrower, but stronger:
 
-Didn't invent a universal abstraction.
+- it matches real operational systems
+- it explains why the abstraction exists
+- it separates the library from generic date utilities
 
-Identified a **recurring edge-case that becomes painful at scale**.
+## Positioning Summary
 
-That’s exactly where small libraries actually make sense.
+The library is strongest when it is used as:
 
----
+- a boundary resolver
+- a windowing engine
+- a consistent source of grouping logic for non-midnight days
 
+It is not intended to be:
+
+- a general calendar library
+- a generic date utility
+- a replacement for application-specific business rules
+
+## Bottom Line
+
+The library addresses a recurring boundary problem that becomes expensive when repeated across reporting, auditing, staffing, payouts, or operational dashboards.
+
+That is a credible place for a small library:
+
+- narrow enough to stay clear
+- broad enough to be reused
+- concrete enough to solve real pain

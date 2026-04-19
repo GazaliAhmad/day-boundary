@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day Boundary DST Toy App</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
+          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+        }
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        line-height: 1.5;
+      }
+
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+
+      .card {
+        border: 1px solid #9994;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+
+      .location-grid,
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .location-button,
+      button,
+      input {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #9995;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+      }
+
+      .location-button,
+      button {
+        cursor: pointer;
+      }
+
+      .location-button.is-active {
+        border-color: currentColor;
+        box-shadow: inset 0 0 0 1px currentColor;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 220px;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: minmax(180px, 240px) 1fr;
+        gap: 8px 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 8px;
+        border-top: 1px solid #9993;
+        vertical-align: top;
+      }
+
+      .muted {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Day Boundary DST Toy App</h1>
+      <p>
+        This v2 toy app is for testing explicit time zones, DST shifts, day
+        duration, and regional behavior with a fixed day boundary.
+      </p>
+
+      <div class="card">
+        <h2>Choose Location</h2>
+        <p class="muted">
+          The list mixes equatorial, temperate, and near-polar locations.
+        </p>
+        <div id="location-grid" class="location-grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+          <label class="field">
+            <span>Boundary time</span>
+            <input id="boundary-time-input" type="time" value="09:00" step="60" />
+          </label>
+          <label class="field">
+            <span>Jump to local date</span>
+            <input id="date-input" type="date" />
+          </label>
+          <label class="field">
+            <span>Jump to local timestamp</span>
+            <input id="datetime-input" type="datetime-local" step="60" />
+          </label>
+        </div>
+        <div class="controls" style="margin-top: 12px;">
+          <button id="prev-day-button" type="button">Previous day</button>
+          <button id="today-button" type="button">Today</button>
+          <button id="next-day-button" type="button">Next day</button>
+          <button id="date-apply-button" type="button">Go to date</button>
+          <button id="datetime-apply-button" type="button">Go to timestamp</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Resolved Window</h2>
+        <div id="status" class="mono muted">Ready.</div>
+        <div class="kv" style="margin-top: 16px;">
+          <div><strong>Location</strong></div>
+          <div id="location-text"></div>
+
+          <div><strong>Region notes</strong></div>
+          <div id="notes-text"></div>
+
+          <div><strong>Time zone</strong></div>
+          <div id="timezone-text" class="mono"></div>
+
+          <div><strong>Selected local timestamp</strong></div>
+          <div id="selected-timestamp" class="mono"></div>
+
+          <div><strong>UTC offset now</strong></div>
+          <div id="offset-text" class="mono"></div>
+
+          <div><strong>Window start</strong></div>
+          <div id="window-start" class="mono"></div>
+
+          <div><strong>Window end</strong></div>
+          <div id="window-end" class="mono"></div>
+
+          <div><strong>Window duration</strong></div>
+          <div id="window-duration" class="mono"></div>
+
+          <div><strong>DST/offset change in window</strong></div>
+          <div id="dst-change" class="mono"></div>
+
+          <div><strong>Next zone transition</strong></div>
+          <div id="next-transition" class="mono"></div>
+
+          <div><strong>Window progress</strong></div>
+          <div id="progress-text" class="mono"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Nearby Day Durations</h2>
+        <p class="muted">
+          These are neighboring resolved windows around the selected local date,
+          useful for spotting 23-hour and 25-hour days around DST changes.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Local date</th>
+              <th>Window</th>
+              <th>Duration</th>
+              <th>Offsets</th>
+            </tr>
+          </thead>
+          <tbody id="duration-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module">
+      import { Temporal } from '@js-temporal/polyfill';
+      import {
+        FixedTimeBoundaryStrategy,
+        getWindowForInstant,
+        getWindowForPlainDateTime,
+        getWindowProgress,
+      } from '../../lib/day-boundary-v2.js';
+
+      const LOCATIONS = [
+        {
+          id: 'longyearbyen',
+          label: 'Longyearbyen',
+          country: 'Svalbard, Norway',
+          timeZone: 'Europe/Oslo',
+          notes: 'High Arctic location, strong seasonal daylight shifts.',
+        },
+        {
+          id: 'reykjavik',
+          label: 'Reykjavik',
+          country: 'Iceland',
+          timeZone: 'Atlantic/Reykjavik',
+          notes: 'Far north, but no seasonal DST clock change.',
+        },
+        {
+          id: 'london',
+          label: 'London',
+          country: 'United Kingdom',
+          timeZone: 'Europe/London',
+          notes: 'Temperate Northern Hemisphere zone with DST.',
+        },
+        {
+          id: 'new-york',
+          label: 'New York',
+          country: 'United States',
+          timeZone: 'America/New_York',
+          notes: 'Temperate North American DST example.',
+        },
+        {
+          id: 'singapore',
+          label: 'Singapore',
+          country: 'Singapore',
+          timeZone: 'Asia/Singapore',
+          notes: 'Equatorial reference point with no DST.',
+        },
+        {
+          id: 'sydney',
+          label: 'Sydney',
+          country: 'Australia',
+          timeZone: 'Australia/Sydney',
+          notes: 'Temperate Southern Hemisphere zone with DST.',
+        },
+        {
+          id: 'punta-arenas',
+          label: 'Punta Arenas',
+          country: 'Chile',
+          timeZone: 'America/Punta_Arenas',
+          notes: 'Far south, useful for southern seasonal comparisons.',
+        },
+        {
+          id: 'auckland',
+          label: 'Auckland',
+          country: 'New Zealand',
+          timeZone: 'Pacific/Auckland',
+          notes: 'Southern temperate zone with DST and strong seasonal contrast.',
+        },
+      ];
+
+      const state = {
+        location: LOCATIONS[0],
+        referenceInstant: null,
+      };
+
+      const locationGridEl = document.getElementById('location-grid');
+      const boundaryTimeInputEl = document.getElementById('boundary-time-input');
+      const dateInputEl = document.getElementById('date-input');
+      const datetimeInputEl = document.getElementById('datetime-input');
+      const prevDayButtonEl = document.getElementById('prev-day-button');
+      const todayButtonEl = document.getElementById('today-button');
+      const nextDayButtonEl = document.getElementById('next-day-button');
+      const dateApplyButtonEl = document.getElementById('date-apply-button');
+      const datetimeApplyButtonEl = document.getElementById('datetime-apply-button');
+      const statusEl = document.getElementById('status');
+      const locationTextEl = document.getElementById('location-text');
+      const notesTextEl = document.getElementById('notes-text');
+      const timezoneTextEl = document.getElementById('timezone-text');
+      const selectedTimestampEl = document.getElementById('selected-timestamp');
+      const offsetTextEl = document.getElementById('offset-text');
+      const windowStartEl = document.getElementById('window-start');
+      const windowEndEl = document.getElementById('window-end');
+      const windowDurationEl = document.getElementById('window-duration');
+      const dstChangeEl = document.getElementById('dst-change');
+      const nextTransitionEl = document.getElementById('next-transition');
+      const progressTextEl = document.getElementById('progress-text');
+      const durationTableEl = document.getElementById('duration-table');
+
+      function getStrategy() {
+        return new FixedTimeBoundaryStrategy({
+          timeZone: state.location.timeZone,
+          boundaryTime: boundaryTimeInputEl.value || '09:00',
+        });
+      }
+
+      function getNowForLocation() {
+        return Temporal.Now.instant();
+      }
+
+      function pad(value) {
+        return String(value).padStart(2, '0');
+      }
+
+      function toDateInputValue(zonedDateTime) {
+        return zonedDateTime.toPlainDate().toString();
+      }
+
+      function toDateTimeInputValue(zonedDateTime) {
+        return `${zonedDateTime.toPlainDate().toString()}T${pad(zonedDateTime.hour)}:${pad(
+          zonedDateTime.minute
+        )}`;
+      }
+
+      function formatZonedDateTime(zonedDateTime) {
+        return new Intl.DateTimeFormat(undefined, {
+          timeZone: zonedDateTime.timeZoneId,
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }).format(new Date(zonedDateTime.epochMilliseconds));
+      }
+
+      function formatTransition(zonedDateTime) {
+        if (!zonedDateTime) return 'None';
+        return `${formatZonedDateTime(zonedDateTime)} (${zonedDateTime.offset})`;
+      }
+
+      function describeNextTransition(selectedZonedDateTime, nextTransition) {
+        if (!nextTransition) {
+          return 'None';
+        }
+
+        const beforeOffsetMinutes = selectedZonedDateTime.offsetNanoseconds / (60 * 1_000_000_000);
+        const afterOffsetMinutes = nextTransition.offsetNanoseconds / (60 * 1_000_000_000);
+        const deltaMinutes = afterOffsetMinutes - beforeOffsetMinutes;
+
+        if (deltaMinutes === 0) {
+          return formatTransition(nextTransition);
+        }
+
+        const direction = deltaMinutes > 0 ? 'clock moves forward' : 'clock moves back';
+        const amountMinutes = Math.abs(deltaMinutes);
+        const hours = Math.floor(amountMinutes / 60);
+        const minutes = amountMinutes % 60;
+        const amountText =
+          minutes === 0 ? `${hours} hour${hours === 1 ? '' : 's'}` : `${amountMinutes} minutes`;
+
+        return `${formatTransition(nextTransition)} — ${direction} by ${amountText}`;
+      }
+
+      function formatDurationHours(window) {
+        const hours =
+          (window.end.toInstant().epochMilliseconds - window.start.toInstant().epochMilliseconds) /
+          (60 * 60 * 1000);
+        return `${hours.toFixed(2)} hours`;
+      }
+
+      function createRepresentativeInstant(dateString) {
+        return Temporal.ZonedDateTime.from({
+          timeZone: state.location.timeZone,
+          year: Number(dateString.slice(0, 4)),
+          month: Number(dateString.slice(5, 7)),
+          day: Number(dateString.slice(8, 10)),
+          hour: 12,
+          minute: 0,
+        }).toInstant();
+      }
+
+      function renderLocationButtons() {
+        locationGridEl.innerHTML = LOCATIONS.map(
+          (location) => `
+            <button
+              type="button"
+              class="location-button ${location.id === state.location.id ? 'is-active' : ''}"
+              data-location-id="${location.id}"
+            >
+              ${location.label}, ${location.country}
+            </button>
+          `
+        ).join('');
+
+        locationGridEl.querySelectorAll('[data-location-id]').forEach((button) => {
+          button.addEventListener('click', () => {
+            state.location = LOCATIONS.find(
+              (location) => location.id === button.dataset.locationId
+            );
+            state.referenceInstant = getNowForLocation();
+            renderAll();
+          });
+        });
+      }
+
+      function renderDurationTable(strategy, selectedZonedDateTime) {
+        const selectedDate = selectedZonedDateTime.toPlainDate();
+        const rows = [];
+
+        for (let offset = -2; offset <= 2; offset += 1) {
+          const date = selectedDate.add({ days: offset });
+          const window = getWindowForPlainDateTime(
+            date.toPlainDateTime(Temporal.PlainTime.from('12:00')),
+            strategy
+          );
+
+          rows.push(`
+            <tr>
+              <td class="mono">${date.toString()}</td>
+              <td class="mono">${formatZonedDateTime(window.start)}<br>to<br>${formatZonedDateTime(window.end)}</td>
+              <td class="mono">${formatDurationHours(window)}</td>
+              <td class="mono">${window.start.offset} -> ${window.end.offset}</td>
+            </tr>
+          `);
+        }
+
+        durationTableEl.innerHTML = rows.join('');
+      }
+
+      function renderAll() {
+        const strategy = getStrategy();
+        const referenceInstant = state.referenceInstant ?? getNowForLocation();
+        const selectedZonedDateTime = referenceInstant.toZonedDateTimeISO(state.location.timeZone);
+        const window = getWindowForInstant(referenceInstant, strategy);
+        const progress = getWindowProgress(referenceInstant, window);
+        const transition = selectedZonedDateTime.getTimeZoneTransition('next');
+        const offsetChanged = window.start.offset !== window.end.offset;
+
+        state.referenceInstant = referenceInstant;
+
+        locationTextEl.textContent = `${state.location.label}, ${state.location.country}`;
+        notesTextEl.textContent = state.location.notes;
+        timezoneTextEl.textContent = state.location.timeZone;
+        selectedTimestampEl.textContent = formatZonedDateTime(selectedZonedDateTime);
+        offsetTextEl.textContent = selectedZonedDateTime.offset;
+        windowStartEl.textContent = `${formatZonedDateTime(window.start)} (${window.start.offset})`;
+        windowEndEl.textContent = `${formatZonedDateTime(window.end)} (${window.end.offset})`;
+        windowDurationEl.textContent = formatDurationHours(window);
+        dstChangeEl.textContent = offsetChanged
+          ? `Yes: ${window.start.offset} -> ${window.end.offset}`
+          : `No: ${window.start.offset}`;
+        nextTransitionEl.textContent = describeNextTransition(selectedZonedDateTime, transition);
+        progressTextEl.textContent = `${(progress * 100).toFixed(2)}%`;
+        dateInputEl.value = toDateInputValue(selectedZonedDateTime);
+        datetimeInputEl.value = toDateTimeInputValue(selectedZonedDateTime);
+        statusEl.textContent =
+          `Resolved using ${boundaryTimeInputEl.value || '09:00'} as the fixed boundary in ${state.location.timeZone}.`;
+
+        renderLocationButtons();
+        renderDurationTable(strategy, selectedZonedDateTime);
+      }
+
+      prevDayButtonEl.addEventListener('click', () => {
+        const zoned = state.referenceInstant.toZonedDateTimeISO(state.location.timeZone);
+        const next = zoned.subtract({ days: 1 });
+        state.referenceInstant = next.toInstant();
+        renderAll();
+      });
+
+      nextDayButtonEl.addEventListener('click', () => {
+        const zoned = state.referenceInstant.toZonedDateTimeISO(state.location.timeZone);
+        const next = zoned.add({ days: 1 });
+        state.referenceInstant = next.toInstant();
+        renderAll();
+      });
+
+      todayButtonEl.addEventListener('click', () => {
+        state.referenceInstant = getNowForLocation();
+        renderAll();
+      });
+
+      dateApplyButtonEl.addEventListener('click', () => {
+        if (!dateInputEl.value) return;
+        state.referenceInstant = createRepresentativeInstant(dateInputEl.value);
+        renderAll();
+      });
+
+      datetimeApplyButtonEl.addEventListener('click', () => {
+        if (!datetimeInputEl.value) return;
+        const plainDateTime = Temporal.PlainDateTime.from(datetimeInputEl.value);
+        state.referenceInstant = Temporal.ZonedDateTime.from({
+          timeZone: state.location.timeZone,
+          year: plainDateTime.year,
+          month: plainDateTime.month,
+          day: plainDateTime.day,
+          hour: plainDateTime.hour,
+          minute: plainDateTime.minute,
+        }).toInstant();
+        renderAll();
+      });
+
+      boundaryTimeInputEl.addEventListener('change', renderAll);
+
+      state.referenceInstant = getNowForLocation();
+      renderAll();
+    </script>
+  </body>
+</html>

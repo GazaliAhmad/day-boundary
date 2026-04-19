@@ -1,8 +1,16 @@
 # Usage
 
-This file shows how to use the APIs exported by `lib/temporal-boundary-library.js`.
+This file documents the legacy v1 API exported by `lib/day-boundary-v1.js`.
 
-## Import
+If you are starting new work, use v2 instead:
+
+- [V2-USAGE.md](./V2-USAGE.md) for the main recommended API
+- `day-boundary/v2` for explicit time-zone-aware boundary resolution
+- `day-boundary/shifts` for companion shift-duration helpers
+
+Use this file when you need the older `Date`-based compatibility path.
+
+## Legacy v1 Import
 
 ```js
 import {
@@ -15,12 +23,14 @@ import {
   isSameWindow,
   groupByWindow,
   getWindowId,
-} from './lib/temporal-boundary-library.js';
+} from './lib/day-boundary-v1.js';
 ```
 
 ## Concepts
 
-The library works with **windows** instead of assuming a day starts at midnight.
+v1 works with **windows** instead of assuming a day starts at midnight.
+
+Unlike v2, v1 is built on native `Date` and does not provide first-class explicit IANA time-zone or DST-safe semantics.
 
 A resolved window looks like this:
 
@@ -48,13 +58,15 @@ That method must return a window with `start`, `end`, `label`, and `metadata`.
 
 Use this when the boundary is the same every day.
 
+This v1 version is best for simple local or single-zone usage.
+
 Example: the operational day starts at `09:00`.
 
 ```js
 import {
   FixedTimeBoundaryStrategy,
   getActiveWindow,
-} from './lib/temporal-boundary-library.js';
+} from './lib/day-boundary-v1.js';
 
 const strategy = new FixedTimeBoundaryStrategy({
   startHour: 9,
@@ -73,13 +85,15 @@ console.log(window.end);   // 2026-04-19 09:00 local time
 
 Use this when the boundary changes by date.
 
+In v1, `getBoundaryForDate(date)` returns a native `Date`.
+
 You provide a `getBoundaryForDate(date)` function.
 
 ```js
 import {
   DailyBoundaryStrategy,
   getActiveWindow,
-} from './lib/temporal-boundary-library.js';
+} from './lib/day-boundary-v1.js';
 
 const boundaryByDate = {
   '2026-04-18': '18:59',
@@ -248,3 +262,4 @@ console.log(reportRows);
 - `dateLike` values can be `Date`, date strings, or timestamps accepted by `new Date(...)`.
 - `DailyBoundaryStrategy` requires you to resolve the boundary for the previous day, current day, and next day around the timestamp being checked.
 - If a boundary cannot be resolved, the library throws by design.
+- For explicit time zones, DST-safe windows, and non-24-hour day handling, prefer v2 in [V2-USAGE.md](./V2-USAGE.md).

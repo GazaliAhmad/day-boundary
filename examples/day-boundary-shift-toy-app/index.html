@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day Boundary Shift Toy App</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
+          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+        }
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        line-height: 1.5;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .card {
+        border: 1px solid #9994;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+
+      .muted {
+        color: #666;
+      }
+
+      .controls,
+      .location-grid,
+      .scenario-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button,
+      input {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #9995;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .location-button.is-active,
+      .scenario-button.is-active {
+        border-color: currentColor;
+        box-shadow: inset 0 0 0 1px currentColor;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 200px;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: minmax(200px, 260px) 1fr;
+        gap: 8px 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 8px;
+        border-top: 1px solid #9993;
+        vertical-align: top;
+      }
+
+      .callout {
+        border-left: 3px solid #9997;
+        padding-left: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Day Boundary Shift Toy App</h1>
+      <p>
+        This example compares two shift interpretations in the same time zone:
+        exact elapsed duration versus wall-clock scheduled duration.
+      </p>
+
+      <div class="card">
+        <h2>Preset Scenarios</h2>
+        <p class="muted">
+          Use these to jump straight to DST-sensitive shift examples or a stable
+          non-DST baseline.
+        </p>
+        <div id="scenario-grid" class="scenario-grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Choose Location</h2>
+        <p class="muted">
+          The list mixes equatorial, temperate, and near-polar locations.
+        </p>
+        <div id="location-grid" class="location-grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+          <label class="field">
+            <span>Shift start local timestamp</span>
+            <input id="datetime-input" type="datetime-local" step="60" />
+          </label>
+          <label class="field">
+            <span>Duration hours</span>
+            <input id="duration-hours-input" type="number" min="0" max="24" value="8" />
+          </label>
+          <label class="field">
+            <span>Duration minutes</span>
+            <input id="duration-minutes-input" type="number" min="0" max="59" value="0" />
+          </label>
+        </div>
+        <div class="controls" style="margin-top: 12px;">
+          <button id="prev-day-button" type="button">Previous start day</button>
+          <button id="today-button" type="button">Local now</button>
+          <button id="next-day-button" type="button">Next start day</button>
+          <button id="apply-button" type="button">Apply timestamp</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Shift Comparison</h2>
+        <div id="status" class="mono muted">Ready.</div>
+        <div class="kv" style="margin-top: 16px;">
+          <div><strong>Location</strong></div>
+          <div id="location-text"></div>
+
+          <div><strong>Region notes</strong></div>
+          <div id="notes-text"></div>
+
+          <div><strong>Time zone</strong></div>
+          <div id="timezone-text" class="mono"></div>
+
+          <div><strong>Shift start</strong></div>
+          <div id="shift-start-text" class="mono"></div>
+
+          <div><strong>Requested duration</strong></div>
+          <div id="duration-text" class="mono"></div>
+
+          <div><strong>Next future zone transition</strong></div>
+          <div id="transition-text" class="mono"></div>
+
+          <div><strong>Divergence summary</strong></div>
+          <div id="difference-text" class="mono"></div>
+        </div>
+
+        <table style="margin-top: 16px;">
+          <thead>
+            <tr>
+              <th>Interpretation</th>
+              <th>Sign-off local time</th>
+              <th>Exact elapsed from start</th>
+              <th>Clock-face span</th>
+              <th>Spans transition</th>
+            </tr>
+          </thead>
+          <tbody id="comparison-table"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>What This Means</h2>
+        <div id="meaning-text" class="callout"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { Temporal } from '@js-temporal/polyfill';
+      import {
+        compareShiftEndings,
+        getShiftEndByElapsedDuration,
+        getShiftEndByWallClockDuration,
+      } from '../../lib/day-boundary-shifts.js';
+
+      const LOCATIONS = [
+        {
+          id: 'longyearbyen',
+          label: 'Longyearbyen',
+          country: 'Svalbard, Norway',
+          timeZone: 'Europe/Oslo',
+          notes: 'High Arctic location, strong seasonal daylight shifts.',
+        },
+        {
+          id: 'reykjavik',
+          label: 'Reykjavik',
+          country: 'Iceland',
+          timeZone: 'Atlantic/Reykjavik',
+          notes: 'Far north, but no seasonal DST clock change.',
+        },
+        {
+          id: 'london',
+          label: 'London',
+          country: 'United Kingdom',
+          timeZone: 'Europe/London',
+          notes: 'Temperate Northern Hemisphere zone with DST.',
+        },
+        {
+          id: 'new-york',
+          label: 'New York',
+          country: 'United States',
+          timeZone: 'America/New_York',
+          notes: 'Temperate North American DST example.',
+        },
+        {
+          id: 'singapore',
+          label: 'Singapore',
+          country: 'Singapore',
+          timeZone: 'Asia/Singapore',
+          notes: 'Equatorial reference point with no DST.',
+        },
+        {
+          id: 'sydney',
+          label: 'Sydney',
+          country: 'Australia',
+          timeZone: 'Australia/Sydney',
+          notes: 'Temperate Southern Hemisphere zone with DST.',
+        },
+        {
+          id: 'punta-arenas',
+          label: 'Punta Arenas',
+          country: 'Chile',
+          timeZone: 'America/Punta_Arenas',
+          notes: 'Far south, useful for southern seasonal comparisons.',
+        },
+        {
+          id: 'auckland',
+          label: 'Auckland',
+          country: 'New Zealand',
+          timeZone: 'Pacific/Auckland',
+          notes: 'Southern temperate zone with DST and strong seasonal contrast.',
+        },
+      ];
+
+      const SCENARIOS = [
+        {
+          id: 'london-fall-back',
+          label: 'London fallback',
+          description: '8h shift during the repeated hour in October.',
+          locationId: 'london',
+          start: '2026-10-25T00:00',
+          durationHours: 8,
+          durationMinutes: 0,
+        },
+        {
+          id: 'london-spring-forward',
+          label: 'London spring-forward',
+          description: '8h shift during the skipped hour in March.',
+          locationId: 'london',
+          start: '2026-03-29T00:00',
+          durationHours: 8,
+          durationMinutes: 0,
+        },
+        {
+          id: 'new-york-fall-back',
+          label: 'New York fallback',
+          description: '8h overnight shift around the US autumn change.',
+          locationId: 'new-york',
+          start: '2026-11-01T00:00',
+          durationHours: 8,
+          durationMinutes: 0,
+        },
+        {
+          id: 'singapore-baseline',
+          label: 'Singapore baseline',
+          description: 'No DST, so both interpretations match.',
+          locationId: 'singapore',
+          start: '2026-04-19T08:00',
+          durationHours: 8,
+          durationMinutes: 0,
+        },
+      ];
+
+      const state = {
+        location: LOCATIONS.find((location) => location.id === 'london'),
+        startPlainDateTime: Temporal.PlainDateTime.from('2026-10-25T00:00'),
+        durationHours: 8,
+        durationMinutes: 0,
+        activeScenarioId: 'london-fall-back',
+      };
+
+      const scenarioGridEl = document.getElementById('scenario-grid');
+      const locationGridEl = document.getElementById('location-grid');
+      const datetimeInputEl = document.getElementById('datetime-input');
+      const durationHoursInputEl = document.getElementById('duration-hours-input');
+      const durationMinutesInputEl = document.getElementById('duration-minutes-input');
+      const prevDayButtonEl = document.getElementById('prev-day-button');
+      const todayButtonEl = document.getElementById('today-button');
+      const nextDayButtonEl = document.getElementById('next-day-button');
+      const applyButtonEl = document.getElementById('apply-button');
+      const statusEl = document.getElementById('status');
+      const locationTextEl = document.getElementById('location-text');
+      const notesTextEl = document.getElementById('notes-text');
+      const timezoneTextEl = document.getElementById('timezone-text');
+      const shiftStartTextEl = document.getElementById('shift-start-text');
+      const durationTextEl = document.getElementById('duration-text');
+      const transitionTextEl = document.getElementById('transition-text');
+      const differenceTextEl = document.getElementById('difference-text');
+      const comparisonTableEl = document.getElementById('comparison-table');
+      const meaningTextEl = document.getElementById('meaning-text');
+
+      function pad(value) {
+        return String(value).padStart(2, '0');
+      }
+
+      function toDateTimeInputValue(plainDateTime) {
+        return `${plainDateTime.toPlainDate().toString()}T${pad(plainDateTime.hour)}:${pad(
+          plainDateTime.minute
+        )}`;
+      }
+
+      function formatZonedDateTime(zonedDateTime) {
+        return new Intl.DateTimeFormat(undefined, {
+          timeZone: zonedDateTime.timeZoneId,
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }).format(new Date(zonedDateTime.epochMilliseconds));
+      }
+
+      function formatZonedDateTimeWithOffset(zonedDateTime) {
+        return `${formatZonedDateTime(zonedDateTime)} (${zonedDateTime.offset})`;
+      }
+
+      function formatRequestedDuration() {
+        const hours = Number(state.durationHours) || 0;
+        const minutes = Number(state.durationMinutes) || 0;
+        return `${hours}h ${minutes}m`;
+      }
+
+      function buildDuration() {
+        return Temporal.Duration.from({
+          hours: Number(state.durationHours) || 0,
+          minutes: Number(state.durationMinutes) || 0,
+        });
+      }
+
+      function buildStartZonedDateTime() {
+        const start = state.startPlainDateTime;
+
+        return Temporal.ZonedDateTime.from({
+          timeZone: state.location.timeZone,
+          year: start.year,
+          month: start.month,
+          day: start.day,
+          hour: start.hour,
+          minute: start.minute,
+          second: start.second,
+        });
+      }
+
+      function formatExactElapsed(start, end) {
+        const minutes =
+          (end.toInstant().epochMilliseconds - start.toInstant().epochMilliseconds) / (60 * 1000);
+        const sign = minutes < 0 ? '-' : '';
+        const absoluteMinutes = Math.abs(minutes);
+        const hours = Math.floor(absoluteMinutes / 60);
+        const remainderMinutes = absoluteMinutes % 60;
+
+        return `${sign}${hours}h ${remainderMinutes}m`;
+      }
+
+      function formatClockSpan(start, end) {
+        const span = end.toPlainDateTime().since(start.toPlainDateTime(), {
+          largestUnit: 'hours',
+        });
+        const totalMinutes = Math.round(span.total({ unit: 'minutes' }));
+        const sign = totalMinutes < 0 ? '-' : '';
+        const absoluteMinutes = Math.abs(totalMinutes);
+        const hours = Math.floor(absoluteMinutes / 60);
+        const remainderMinutes = absoluteMinutes % 60;
+
+        return `${sign}${hours}h ${remainderMinutes}m`;
+      }
+
+      function describeTransition(start, transition) {
+        if (!transition) {
+          return 'None';
+        }
+
+        const deltaMinutes =
+          (transition.offsetNanoseconds - start.offsetNanoseconds) / (60 * 1_000_000_000);
+
+        if (deltaMinutes === 0) {
+          return formatZonedDateTimeWithOffset(transition);
+        }
+
+        const direction = deltaMinutes > 0 ? 'clock moves forward' : 'clock moves back';
+        const amountMinutes = Math.abs(deltaMinutes);
+        const amountText =
+          amountMinutes % 60 === 0
+            ? `${amountMinutes / 60} hour${amountMinutes === 60 ? '' : 's'}`
+            : `${amountMinutes} minutes`;
+
+        return `${formatZonedDateTimeWithOffset(transition)} — ${direction} by ${amountText}`;
+      }
+
+      function shiftSpansTransition(start, end, transition) {
+        if (!transition) {
+          return false;
+        }
+
+        return (
+          Temporal.Instant.compare(start.toInstant(), transition.toInstant()) < 0 &&
+          Temporal.Instant.compare(transition.toInstant(), end.toInstant()) <= 0
+        );
+      }
+
+      function renderScenarioButtons() {
+        scenarioGridEl.innerHTML = SCENARIOS.map(
+          (scenario) => `
+            <button
+              type="button"
+              class="scenario-button ${scenario.id === state.activeScenarioId ? 'is-active' : ''}"
+              data-scenario-id="${scenario.id}"
+              title="${scenario.description}"
+            >
+              ${scenario.label}
+            </button>
+          `
+        ).join('');
+
+        scenarioGridEl.querySelectorAll('[data-scenario-id]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const scenario = SCENARIOS.find((entry) => entry.id === button.dataset.scenarioId);
+            state.location = LOCATIONS.find((location) => location.id === scenario.locationId);
+            state.startPlainDateTime = Temporal.PlainDateTime.from(scenario.start);
+            state.durationHours = scenario.durationHours;
+            state.durationMinutes = scenario.durationMinutes;
+            state.activeScenarioId = scenario.id;
+            renderAll();
+          });
+        });
+      }
+
+      function renderLocationButtons() {
+        locationGridEl.innerHTML = LOCATIONS.map(
+          (location) => `
+            <button
+              type="button"
+              class="location-button ${location.id === state.location.id ? 'is-active' : ''}"
+              data-location-id="${location.id}"
+            >
+              ${location.label}, ${location.country}
+            </button>
+          `
+        ).join('');
+
+        locationGridEl.querySelectorAll('[data-location-id]').forEach((button) => {
+          button.addEventListener('click', () => {
+            state.location = LOCATIONS.find(
+              (location) => location.id === button.dataset.locationId
+            );
+            state.activeScenarioId = null;
+            renderAll();
+          });
+        });
+      }
+
+      function renderComparisonTable(start, elapsedEnd, wallClockEnd, transition) {
+        const rows = [
+          {
+            label: 'Exact elapsed duration',
+            end: elapsedEnd,
+            exactElapsed: formatExactElapsed(start, elapsedEnd),
+            clockSpan: formatClockSpan(start, elapsedEnd),
+            spansTransition: shiftSpansTransition(start, elapsedEnd, transition),
+          },
+          {
+            label: 'Wall-clock scheduled duration',
+            end: wallClockEnd,
+            exactElapsed: formatExactElapsed(start, wallClockEnd),
+            clockSpan: formatClockSpan(start, wallClockEnd),
+            spansTransition: shiftSpansTransition(start, wallClockEnd, transition),
+          },
+        ];
+
+        comparisonTableEl.innerHTML = rows
+          .map(
+            (row) => `
+              <tr>
+                <td>${row.label}</td>
+                <td class="mono">${formatZonedDateTimeWithOffset(row.end)}</td>
+                <td class="mono">${row.exactElapsed}</td>
+                <td class="mono">${row.clockSpan}</td>
+                <td class="mono">${row.spansTransition ? 'Yes' : 'No'}</td>
+              </tr>
+            `
+          )
+          .join('');
+      }
+
+      function renderMeaning(start, elapsedEnd, wallClockEnd, differenceMinutes) {
+        if (differenceMinutes === 0) {
+          meaningTextEl.textContent =
+            `Both interpretations sign off at ${formatZonedDateTimeWithOffset(
+              elapsedEnd
+            )}. This location/time combination does not create a DST-related divergence for the chosen shift.`;
+          return;
+        }
+
+        const laterEnd = differenceMinutes > 0 ? wallClockEnd : elapsedEnd;
+        const earlierEnd = differenceMinutes > 0 ? elapsedEnd : wallClockEnd;
+        const laterLabel =
+          differenceMinutes > 0 ? 'wall-clock scheduled shift' : 'exact elapsed shift';
+        const minutesText = `${Math.abs(differenceMinutes)} minute${
+          Math.abs(differenceMinutes) === 1 ? '' : 's'
+        }`;
+
+        meaningTextEl.textContent =
+          `These interpretations diverge by ${minutesText}. The ${laterLabel} ends later at ${formatZonedDateTimeWithOffset(
+            laterEnd
+          )}, while the other interpretation ends at ${formatZonedDateTimeWithOffset(
+            earlierEnd
+          )}. This is the kind of distinction hospitals, care teams, and other shift-based operations need to define explicitly.`;
+      }
+
+      function renderAll() {
+        const start = buildStartZonedDateTime();
+        const duration = buildDuration();
+        const comparison = compareShiftEndings(start, duration);
+        const elapsedEnd = getShiftEndByElapsedDuration(start, duration);
+        const wallClockEnd = getShiftEndByWallClockDuration(start, duration);
+        const transition = start.getTimeZoneTransition('next');
+
+        datetimeInputEl.value = toDateTimeInputValue(state.startPlainDateTime);
+        durationHoursInputEl.value = String(state.durationHours);
+        durationMinutesInputEl.value = String(state.durationMinutes);
+
+        locationTextEl.textContent = `${state.location.label}, ${state.location.country}`;
+        notesTextEl.textContent = state.location.notes;
+        timezoneTextEl.textContent = state.location.timeZone;
+        shiftStartTextEl.textContent = formatZonedDateTimeWithOffset(start);
+        durationTextEl.textContent = formatRequestedDuration();
+        transitionTextEl.textContent = describeTransition(start, transition);
+        differenceTextEl.textContent = comparison.sameInstant
+          ? 'No divergence. Both rules produce the same sign-off instant.'
+          : `The two rules differ by ${Math.abs(comparison.differenceMinutes)} minute${
+              Math.abs(comparison.differenceMinutes) === 1 ? '' : 's'
+            }.`;
+        statusEl.textContent = `Comparing shift rules from ${formatZonedDateTimeWithOffset(
+          start
+        )} in ${state.location.timeZone}.`;
+
+        renderScenarioButtons();
+        renderLocationButtons();
+        renderComparisonTable(start, elapsedEnd, wallClockEnd, transition);
+        renderMeaning(start, elapsedEnd, wallClockEnd, comparison.differenceMinutes);
+      }
+
+      prevDayButtonEl.addEventListener('click', () => {
+        state.startPlainDateTime = state.startPlainDateTime.subtract({ days: 1 });
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      nextDayButtonEl.addEventListener('click', () => {
+        state.startPlainDateTime = state.startPlainDateTime.add({ days: 1 });
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      todayButtonEl.addEventListener('click', () => {
+        state.startPlainDateTime = Temporal.Now.zonedDateTimeISO(state.location.timeZone).toPlainDateTime();
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      applyButtonEl.addEventListener('click', () => {
+        if (!datetimeInputEl.value) {
+          return;
+        }
+
+        state.startPlainDateTime = Temporal.PlainDateTime.from(datetimeInputEl.value);
+        state.durationHours = Math.max(0, Number(durationHoursInputEl.value) || 0);
+        state.durationMinutes = Math.min(59, Math.max(0, Number(durationMinutesInputEl.value) || 0));
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      durationHoursInputEl.addEventListener('change', () => {
+        state.durationHours = Math.max(0, Number(durationHoursInputEl.value) || 0);
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      durationMinutesInputEl.addEventListener('change', () => {
+        state.durationMinutes = Math.min(59, Math.max(0, Number(durationMinutesInputEl.value) || 0));
+        state.activeScenarioId = null;
+        renderAll();
+      });
+
+      renderAll();
+    </script>
+  </body>
+</html>
