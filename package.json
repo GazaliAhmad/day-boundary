@@ -10,7 +10,8 @@
     "./shifts": "./lib/day-boundary-shifts-v2.js"
   },
   "files": [
-    "lib/",
+    "lib/day-boundary-v2.js",
+    "lib/day-boundary-shifts-v2.js",
     "examples/",
     "README.md",
     "IP-NOTICE.md",
