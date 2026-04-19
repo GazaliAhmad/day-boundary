@@ -2,6 +2,8 @@
 
 A small JavaScript library for working with non-midnight day boundaries.
 
+This project is copyright-owned by Gazali Ahmad and may be used, distributed, or marketed by The Right Business Pte Ltd. See [IP-NOTICE.md](./IP-NOTICE.md).
+
 Most systems assume a day starts at 00:00. This library lets you redefine that boundary, whether fixed (for example 09:00) or shifting based on a daily function.
 
 ## Why this exists
@@ -32,8 +34,8 @@ Everything else is derived from that.
 
 The repo currently contains two API tracks:
 
-- v2: the main recommended API for new work, in `./lib/day-boundary-v2.js`
-- v1: the legacy `Date`-based compatibility API in `./lib/day-boundary-v1.js`
+- v2: the main recommended API for new work, exported from `day-boundary`
+- v1: the legacy `Date`-based compatibility API in `./lib/day-boundary-v1.js` and `day-boundary/v1`
 
 Use v2 if your system is global, needs explicit IANA time zones, or must handle DST correctly.
 
@@ -47,19 +49,23 @@ Install the package:
 npm install day-boundary
 ```
 
-For v2, also install the Temporal polyfill:
+The package already depends on `@js-temporal/polyfill`, so npm installs it automatically.
 
-```bash
-npm install @js-temporal/polyfill
+If application code also imports `Temporal` directly, the import is still:
+
+```js
+import { Temporal } from '@js-temporal/polyfill';
 ```
 
 ### Main import for new work
 
-In Node:
+In Node, import the library from `day-boundary`.
+
+If application code also uses `Temporal` directly:
 
 ```js
 import { Temporal } from '@js-temporal/polyfill';
-import { FixedTimeBoundaryStrategy } from 'day-boundary/v2';
+import { FixedTimeBoundaryStrategy } from 'day-boundary';
 ```
 
 In browsers without a bundler, add an import map for the polyfill and its `jsbi` dependency before importing `./lib/day-boundary-v2.js`.
@@ -74,6 +80,12 @@ No build step required. Use as a native ES module.
 <script type="module">
   import { ... } from './lib/day-boundary-v1.js';
 </script>
+```
+
+For package consumers, the legacy path is available at:
+
+```js
+import { ... } from 'day-boundary/v1';
 ```
 
 ## Concepts
@@ -94,7 +106,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import {
   FixedTimeBoundaryStrategy,
   getWindowForInstant,
-} from 'day-boundary/v2';
+} from 'day-boundary';
 
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: 'Europe/London',
@@ -190,14 +202,14 @@ The main v2 surface is:
 - `groupByWindow`
 - `getWindowId`
 
-Use it via:
+Use it via the package root:
 
 ```js
 import {
   DailyBoundaryStrategy,
   FixedTimeBoundaryStrategy,
   getWindowForInstant,
-} from 'day-boundary/v2';
+} from 'day-boundary';
 ```
 
 See:

@@ -6,7 +6,7 @@ import {
   compareShiftEndings,
   getShiftEndByElapsedDuration,
   getShiftEndByWallClockDuration,
-} from "../lib/day-boundary-shifts.js";
+} from "../lib/day-boundary-shifts-v2.js";
 
 export function runDayBoundaryShiftTests(run) {
   run("shift helpers distinguish elapsed and wall-clock endings across London fall-back DST", () => {

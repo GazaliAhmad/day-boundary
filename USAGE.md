@@ -5,7 +5,7 @@ This file documents the legacy v1 API exported by `lib/day-boundary-v1.js`.
 If you are starting new work, use v2 instead:
 
 - [V2-USAGE.md](./V2-USAGE.md) for the main recommended API
-- `day-boundary/v2` for explicit time-zone-aware boundary resolution
+- `day-boundary` for explicit time-zone-aware boundary resolution
 - `day-boundary/shifts` for companion shift-duration helpers
 
 Use this file when you need the older `Date`-based compatibility path.

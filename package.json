@@ -3,16 +3,18 @@
   "version": "2.0.0",
   "description": "A small JavaScript library for resolving custom operational day boundaries.",
   "type": "module",
-  "main": "./lib/day-boundary-v1.js",
+  "main": "./lib/day-boundary-v2.js",
   "exports": {
-    ".": "./lib/day-boundary-v1.js",
+    ".": "./lib/day-boundary-v2.js",
+    "./v1": "./lib/day-boundary-v1.js",
     "./v2": "./lib/day-boundary-v2.js",
-    "./shifts": "./lib/day-boundary-shifts.js"
+    "./shifts": "./lib/day-boundary-shifts-v2.js"
   },
   "files": [
     "lib/",
     "examples/",
     "README.md",
+    "IP-NOTICE.md",
     "CHANGELOG.md",
     "USAGE.md",
     "V2-API.md",
@@ -33,7 +35,7 @@
     "type": "git",
     "url": "."
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1"
   }

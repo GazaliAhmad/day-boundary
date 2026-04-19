@@ -1,145 +1,212 @@
 # Roadmap
 
-This project is aimed at being a reusable library for custom operational day boundaries.
+This roadmap reflects the current state of `day-boundary` after the `2.0.0` release.
 
-The scope is intentionally narrow:
+The library is now positioned as:
 
-- resolve which operational day window a timestamp belongs to
-- compare timestamps by operational day membership
-- group records by operational day window
-- compute progress through the current operational day
+> a reusable boundary engine for systems where the operational day is not midnight
 
-For v1, the library should stay focused on custom day boundaries. It should not expand into a general scheduling engine or arbitrary business-period framework unless multiple real examples prove that broader abstraction is necessary.
+The current direction is:
+
+- v2 is the main API for new work
+- v1 remains available as a legacy compatibility path
+- shift-specific semantics stay in a companion layer, not in the core boundary engine
+
+## Current State
+
+The repo already includes:
+
+- a legacy v1 API in [lib/day-boundary-v1.js](./lib/day-boundary-v1.js)
+- a main v2 API in [lib/day-boundary-v2.js](./lib/day-boundary-v2.js)
+- a companion shift layer in [lib/day-boundary-shifts-v2.js](./lib/day-boundary-shifts-v2.js)
+- a test suite covering v1, v2, DST-sensitive windows, and shift semantics
+- browser examples in [examples/](./examples/)
+- npm packaging metadata for `day-boundary@2.0.0`
+
+The package surface is currently:
+
+- `day-boundary` -> main v2 API
+- `day-boundary/v1` -> legacy v1 API
+- `day-boundary/v2` -> explicit v2 subpath
+- `day-boundary/shifts` -> companion shift helpers
 
 ## Product Frame
 
-The working product statement is:
+The core library should stay narrow.
 
-> Day Boundary Library resolves custom operational day windows when the day does not start at midnight.
-Use [use-cases.md](./use-cases.md) as the filter for future additions. A feature should belong in the core library only when it supports repeated operational-boundary logic with meaningful consequences if wrong.
+The library is responsible for:
 
-## Public API Stabilization
+- resolving boundary-defined day windows
+- comparing timestamps by window membership
+- grouping records into boundary windows
+- computing progress through a boundary window
+- handling explicit time zones and DST correctly in v2
 
-Current exports in [lib/day-boundary-library.js](./lib/day-boundary-library.js):
+The library is not responsible for:
 
-- `BoundaryStrategy`
-- `FixedTimeBoundaryStrategy`
-- `DailyBoundaryStrategy`
-- `getActiveWindow`
-- `getWindowForTimestamp`
-- `getWindowProgress`
-- `isSameWindow`
-- `groupByWindow`
-- `getWindowId`
+- calculating calendar labels
+- becoming a general scheduling engine
+- embedding domain-specific business meaning into the core API
+- replacing downstream application logic
 
-Recommended API direction:
+Use [use-cases.md](./use-cases.md) as the filter for future additions.
 
-- Keep `BoundaryStrategy`
-- Keep `FixedTimeBoundaryStrategy`
-- Keep `DailyBoundaryStrategy`
-- Keep `getWindowForTimestamp` as the canonical resolver
-- Keep `getActiveWindow` as a documented convenience alias for now
-- Keep `getWindowProgress`
-- Keep `isSameWindow`
-- Keep `groupByWindow`
-- Keep `getWindowId`
+## Core Direction
 
-## Error Behavior
+### Main path
 
-The library should remain strict, but its failure modes should become more predictable and easier for consumers to understand.
+The main path is v2.
 
-Recommended behavior:
+That means future product and documentation decisions should assume:
 
-- invalid timestamp input: `TypeError`
-- invalid strategy object: `TypeError`
-- invalid `getBoundaryForDate` option: `TypeError`
-- missing or invalid resolved boundary: clear `RangeError` or documented error code
-- resolved window with `end <= start`: `RangeError`
+- `Temporal`-based primitives
+- explicit IANA time zones
+- correct DST and non-24-hour day behavior
+- `Temporal.ZonedDateTime` windows in the public API
 
-The goal is not to make the library permissive. The goal is to make strict behavior intentional and well documented.
+### Legacy path
 
-## Example Strategy
+v1 remains available for:
 
-Examples should validate the abstraction without forcing domain-specific logic into the core library too early.
+- existing integrations
+- simpler local-only or single-zone usage
+- migration support
 
-Planned examples:
+v1 should be maintained conservatively.
+It should receive bug fixes and clarity improvements, but not drive the main design direction.
 
-- `examples/shift-scheduling-dashboard`
-- `examples/hospital-shift-grouping`
-- `examples/ride-hailing-earnings`
+## Current Examples
 
-How to use them:
+The current example suite is:
 
-- shift scheduling dashboard validates direct operational-day reporting
-- hospital shift grouping validates audit and handover workflows across midnight
-- ride-hailing earnings validates whether a future broader “operational period” abstraction is needed
+- [examples/day-boundary-toy-app/index.html](./examples/day-boundary-toy-app/index.html)
+- [examples/day-boundary-hijri-poc/index.html](./examples/day-boundary-hijri-poc/index.html)
+- [examples/day-boundary-dst-toy-app/index.html](./examples/day-boundary-dst-toy-app/index.html)
+- [examples/day-boundary-shift-toy-app/index.html](./examples/day-boundary-shift-toy-app/index.html)
 
-Promotion rule for new core features:
+These examples currently validate:
 
-- if only one example needs a feature, keep it in the example
-- if two or more examples need it, consider moving it into the library
+- fixed daily boundaries
+- shifting per-date boundaries
+- dataset-backed window resolution
+- DST-aware day duration behavior
+- global time-zone behavior
+- elapsed-duration versus wall-clock shift semantics
 
-## Packaging Work
+## Next Priorities
 
-Once tests and API behavior are stable, the repo should include:
+The next phase should focus on hardening and adoption rather than expanding the core API too quickly.
 
-- `package.json`
-- ESM metadata
-- exports entry
-- test script
-- repository metadata
-- license
-- files list for publishing
+### 1. Error behavior and documentation polish
 
-## Documentation Work
+The code is already strict, but the remaining work is to make error behavior easier for consumers to understand and rely on.
 
-After the API is stabilized, update [README.md](./README.md) so it clearly answers:
+Focus areas:
 
-- what problem the library solves
-- when to use it
-- fixed boundary usage
-- shifting boundary usage
-- error behavior
-- scope limits
-- links to examples
+- document expected error types more explicitly
+- standardize wording for invalid boundary resolution failures
+- keep examples clear about what throws and why
 
-## Concrete File Plan
+### 2. Real-world example coverage
 
-Core and packaging:
+The existing examples are strong, but more domain-specific validation may still be useful.
 
-- update [lib/day-boundary-library.js](./lib/day-boundary-library.js)
-- add `package.json`
-- add `test/fixed-time-boundary.test.js`
-- add `test/daily-boundary.test.js`
-- add `test/grouping.test.js`
+Good candidates:
 
-Examples:
+- hospital or care-shift grouping
+- ride-hailing or earnings-window reporting
+- another dataset-backed example in a DST-sensitive region
 
-- add `examples/shift-scheduling-dashboard/index.html`
-- add `examples/hospital-shift-grouping/index.html`
-- add `examples/ride-hailing-earnings/index.html`
-- add `examples/README.md`
+Promotion rule:
 
-Project docs:
+- if only one example needs a behavior, keep it in the example layer
+- if multiple examples need the same behavior, consider promoting it into a helper or companion module
 
-- update [README.md](./README.md)
-- update [CHANGELOG.md](./CHANGELOG.md)
+### 3. Packaging and publishing hygiene
 
-## Recommended Implementation Order
+Before broader adoption, keep tightening the publishing story.
 
-1. Add `package.json` and a zero-dependency test scaffold.
-2. Add tests that lock intended behavior for the current API.
-3. Refine the library implementation until the tests pass consistently.
-4. Freeze and document the final public API names.
-5. Tighten error messages and stable error behavior.
-6. Add the shift scheduling example.
-7. Add the hospital shift example.
-8. Add the ride-hailing example as a scope probe.
-9. Update the README around the stabilized API.
-10. Prepare the next release entry in the changelog.
+Focus areas:
+
+- keep package metadata aligned with docs
+- periodically verify `npm pack` contents
+- keep the public import story simple and stable
+- make browser/polyfill guidance easy to follow
+
+### 4. API stability review
+
+v2 is now the main path, but it is still worth reviewing whether the current public names should remain final.
+
+Focus areas:
+
+- keep the core surface small
+- resist adding convenience overloads too quickly
+- prefer clear companion helpers over bloating the main boundary engine
+
+## Companion Layer Strategy
+
+The shift helpers validate an important design principle:
+
+- boundary resolution belongs in the core library
+- shift/payroll/staffing interpretation belongs in a companion layer
+
+That separation should be preserved.
+
+Potential future companion directions:
+
+- label-mapping helpers
+- reporting adapters
+- higher-level shift or rota helpers
+
+These should only be added when repeated real use cases justify them.
+
+## Deferred Work
+
+The following items are intentionally deferred unless stronger evidence appears:
+
+- general business-period abstractions beyond boundary-defined days
+- calendar-label calculation inside core
+- a full scheduling or roster engine
+- heavy domain logic in the main package
+
+## Documentation Direction
+
+The documentation should continue to reinforce:
+
+- `day-boundary` is the main v2 entry point
+- `day-boundary/v1` is the legacy path
+- `day-boundary/shifts` is a companion layer
+- the library is a boundary engine, not a general date library
 
 ## Milestones
 
-- `0.2.0`: tests, API review, error behavior cleanup
-- `0.3.0`: example apps validating the abstraction
-- `1.0.0`: publishable reusable library with stable docs and packaging
+### `2.x`
+
+Focus on:
+
+- documentation clarity
+- package consistency
+- example refinement
+- careful API stability review
+
+### `3.0.0` candidate threshold
+
+A major version should only be considered if one of these becomes necessary:
+
+- a breaking change to the v2 public API
+- a change to the public window shape
+- a major revision to the package entry structure
+- a deliberate narrowing or widening of the library scope
+
+## Bottom Line
+
+The early roadmap was about proving the abstraction.
+
+That phase is complete.
+
+The current roadmap is about:
+
+- stabilizing the v2-first package story
+- validating the abstraction across real examples
+- resisting unnecessary expansion
+- keeping the core library small, clear, and credible

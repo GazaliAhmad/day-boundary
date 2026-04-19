@@ -64,7 +64,7 @@ The library should do its core comparison, grouping, and progress calculations u
 ## Package entry
 
 ```js
-import { ... } from 'day-boundary/v2';
+import { ... } from 'day-boundary';
 ```
 
 ## Strategy API

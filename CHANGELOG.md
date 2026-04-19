@@ -14,18 +14,21 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - `package.json` with an ESM package setup and `npm test`.
 - v2 module in `lib/day-boundary-v2.js` with explicit IANA time-zone-aware boundary resolution.
 - `V2-USAGE.md` covering Node and browser usage, including import-map setup for the Temporal polyfill.
-- Companion shift helper layer in `lib/day-boundary-shifts.js` with DST-aware elapsed-duration and wall-clock shift-ending helpers.
+- Companion shift helper layer in `lib/day-boundary-shifts-v2.js` with DST-aware elapsed-duration and wall-clock shift-ending helpers.
 - Browser examples for dataset-backed boundary resolution, global DST inspection, and shift-signoff comparison in `examples/`.
 - Expanded test coverage for DST-sensitive windows, v2 helper behavior, and shift-duration semantics.
+- MIT licensing metadata and a top-level `LICENSE` file.
+- `IP-NOTICE.md` clarifying project copyright ownership and business association.
 
 ### Changed
 
 - Promoted v2 to the main recommended API for new work.
 - Kept v1 as a legacy compatibility path for existing `Date`-based usage.
-- Renamed the package and primary library file to `day-boundary`.
+- Renamed the package to `day-boundary`.
+- Renamed the legacy v1 file to `lib/day-boundary-v1.js`.
 - Reorganized browser demos into the `examples/` folder.
-- Added package subpath exports at `day-boundary/v2` and `day-boundary/shifts`.
-- Expanded the docs to distinguish legacy v1 from the main v2 path and document the polyfill/browser setup.
+- Set the package root export `day-boundary` to the v2 API and kept compatibility exports for `day-boundary/v1`, `day-boundary/v2`, and `day-boundary/shifts`.
+- Expanded the docs to distinguish legacy v1 from the main v2 path, document the polyfill/browser setup, and align install guidance with package dependencies.
 
 ## [1.0.0] - 2026-04-19
 

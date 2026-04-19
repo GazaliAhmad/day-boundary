@@ -1,6 +1,6 @@
 # V2 Usage
 
-This file shows how to use the v2 API exported from `day-boundary/v2`.
+This file shows how to use the v2 API exported from `day-boundary`.
 
 v2 is the explicit time-zone-aware path:
 
@@ -12,7 +12,15 @@ v2 is the explicit time-zone-aware path:
 ## Install
 
 ```bash
-npm install day-boundary @js-temporal/polyfill
+npm install day-boundary
+```
+
+`day-boundary` already includes `@js-temporal/polyfill` as a dependency.
+
+If application code also imports `Temporal` directly, use:
+
+```js
+import { Temporal } from '@js-temporal/polyfill';
 ```
 
 ## Node usage
@@ -23,7 +31,7 @@ import {
   FixedTimeBoundaryStrategy,
   getWindowForInstant,
   getWindowProgress,
-} from 'day-boundary/v2';
+} from 'day-boundary';
 
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: 'Europe/London',
@@ -85,7 +93,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import {
   FixedTimeBoundaryStrategy,
   getWindowForInstant,
-} from 'day-boundary/v2';
+} from 'day-boundary';
 
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: 'America/New_York',
@@ -108,7 +116,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import {
   DailyBoundaryStrategy,
   getWindowForInstant,
-} from 'day-boundary/v2';
+} from 'day-boundary';
 
 const boundaryByDate = {
   '2026-04-18': '18:59',
