@@ -1,7 +1,7 @@
 {
   "name": "day-boundary",
-  "version": "2.0.0",
-  "description": "A small JavaScript library for resolving custom operational day boundaries.",
+  "version": "2.0.1",
+  "description": "JavaScript library for non-midnight operational day boundaries, DST-safe window resolution, and shift-aware time-zone logic.",
   "type": "module",
   "main": "./lib/day-boundary-v2.js",
   "exports": {
@@ -14,6 +14,7 @@
     "lib/day-boundary-shifts-v2.js",
     "examples/",
     "README.md",
+    "FUNCTIONS.md",
     "IP-NOTICE.md",
     "CHANGELOG.md",
     "V2-API.md",
@@ -23,12 +24,16 @@
     "test": "node test/run-tests.js"
   },
   "keywords": [
-    "time",
-    "date",
-    "boundary",
+    "temporal",
+    "timezone",
+    "dst",
     "day-boundary",
     "operational-day",
-    "reporting"
+    "business-day",
+    "reporting-window",
+    "time-window",
+    "shift-scheduling",
+    "payroll"
   ],
   "repository": {
     "type": "git",

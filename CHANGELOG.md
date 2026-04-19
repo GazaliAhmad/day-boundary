@@ -6,6 +6,17 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-04-19
+
+### Added
+
+- `FUNCTIONS.md` as a dedicated v2 reference covering the public API table, internal helper inventory, strategy classes, and shifts companion functions.
+
+### Changed
+
+- Included `FUNCTIONS.md` in the published npm package via the `files` list in `package.json`.
+- Improved npm package discoverability by refining the package description and keywords around Temporal, time zones, DST, business-day boundaries, reporting windows, shift scheduling, and payroll use cases.
+
 ## [2.0.0] - 2026-04-19
 
 ### Added
