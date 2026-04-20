@@ -12,98 +12,7 @@
         }
       }
     </script>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      body {
-        margin: 0;
-        padding: 24px;
-        line-height: 1.5;
-      }
-
-      .wrap {
-        max-width: 1040px;
-        margin: 0 auto;
-      }
-
-      .card {
-        border: 1px solid #9994;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-
-      h1,
-      h2 {
-        margin-top: 0;
-      }
-
-      .mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        word-break: break-word;
-      }
-
-      .location-grid,
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .location-button,
-      button,
-      input {
-        padding: 10px 14px;
-        border-radius: 8px;
-        border: 1px solid #9995;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-      }
-
-      .location-button,
-      button {
-        cursor: pointer;
-      }
-
-      .location-button.is-active {
-        border-color: currentColor;
-        box-shadow: inset 0 0 0 1px currentColor;
-      }
-
-      .field {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 220px;
-      }
-
-      .kv {
-        display: grid;
-        grid-template-columns: minmax(180px, 240px) 1fr;
-        gap: 8px 16px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      th,
-      td {
-        text-align: left;
-        padding: 8px;
-        border-top: 1px solid #9993;
-        vertical-align: top;
-      }
-
-      .muted {
-        color: #666;
-      }
-    </style>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="wrap">
@@ -137,7 +46,7 @@
             <input id="datetime-input" type="datetime-local" step="60" />
           </label>
         </div>
-        <div class="controls" style="margin-top: 12px;">
+        <div class="controls controls-spaced">
           <button id="prev-day-button" type="button">Previous day</button>
           <button id="today-button" type="button">Today</button>
           <button id="next-day-button" type="button">Next day</button>
@@ -149,7 +58,7 @@
       <div class="card">
         <h2>Resolved Window</h2>
         <div id="status" class="mono muted">Ready.</div>
-        <div class="kv" style="margin-top: 16px;">
+        <div class="kv kv-spaced">
           <div><strong>Location</strong></div>
           <div id="location-text"></div>
 

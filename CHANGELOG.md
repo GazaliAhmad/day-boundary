@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-04-21
+
+### Changed
+
+- Refined `README.md` so the npm landing page makes the default v2 entry point clearer, with `FixedTimeBoundaryStrategy` and `getWindowForInstant` called out immediately for first-time users.
+- Tightened README wording around operational windows, DST behavior, entry-point selection, and example naming for better consistency and coherence.
+- Extracted inline styles from the browser example HTML files into sibling `styles.css` files for cleaner example structure in `examples/`.
+
 ## [2.0.1] - 2026-04-19
 
 ### Added
