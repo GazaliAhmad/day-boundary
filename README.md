@@ -1,103 +1,19 @@
 # Day Boundary Library
 
-Assign timestamps to operational days when your day does not start at midnight.
+Assign timestamps to operational windows when midnight breaks your logic.
 
-For example, with a 09:00 boundary, an event at 00:30 belongs to the previous operational day, not the new calendar date.
+For most applications, start with `FixedTimeBoundaryStrategy` and `getWindowForInstant`.
+That is the default entry point if you need to answer:
 
-This library gives you a consistent way to:
-- resolve boundary windows
-- group records by operational day
-- handle fixed or date-shifting boundaries
-- model DST-safe behavior with explicit time zones (v2)
+> Which operational window does this exact timestamp belong to?
 
-Best for:
-- shift and rota systems
-- overnight operations
-- payroll and reporting pipelines
-- compliance and audit grouping logic
+---
 
-## Why this exists
-
-Production systems still need deterministic day windows for grouping, reporting, and handover logic.
-
-Common cases:
-
-* shift-based work such as factories and logistics
-* overnight operations like healthcare or transport
-* systems where continuity matters more than calendar alignment
-
-Keeping midnight as the boundary in these systems causes split records, broken aggregation, and scattered "previous day" logic.
-
-This library centralizes that boundary logic so the rest of your application stays consistent.
-
-## Core idea
-
-Instead of asking what calendar date something belongs to, you define which window it belongs to.
-
-A day is treated as a window:
-
-[boundary_n, boundary_n+1)
-
-Everything else is derived from that.
-
-## Status
-
-The project is v2-first.
-
-Use the package root `day-boundary` for boundary resolution and `day-boundary/shifts` for companion shift helpers.
-
-v2 is designed for explicit IANA time zones and correct DST handling.
-
-## Installation
-
-Install the package:
-
-```bash
-npm install day-boundary
-```
-
-The package already depends on `@js-temporal/polyfill`, so npm installs it automatically.
-
-If application code also imports `Temporal` directly, the import is still:
+## Quick Start (2 minutes)
 
 ```js
 import { Temporal } from '@js-temporal/polyfill';
-```
-
-### Main import for new work
-
-In Node, import the library from `day-boundary`.
-
-If application code also uses `Temporal` directly:
-
-```js
-import { Temporal } from '@js-temporal/polyfill';
-import { FixedTimeBoundaryStrategy } from 'day-boundary';
-```
-
-In browsers without a bundler, add an import map for the polyfill and its `jsbi` dependency before importing `./lib/day-boundary-v2.js`.
-
-See [V2-USAGE.md](./V2-USAGE.md) for the full copy-paste setup.
-
-## Concepts
-
-A BoundaryStrategy defines how a day boundary is resolved.
-
-Two implementations are provided:
-
-* FixedTimeBoundaryStrategy for fixed daily boundaries
-* DailyBoundaryStrategy for boundaries that change per date
-
-For the explicit time-zone-aware v2 direction, see [V2-API.md](./V2-API.md) and [V2-USAGE.md](./V2-USAGE.md).
-
-## Main Example: Fixed Boundary With v2
-
-```js
-import { Temporal } from '@js-temporal/polyfill';
-import {
-  FixedTimeBoundaryStrategy,
-  getWindowForInstant,
-} from 'day-boundary';
+import { FixedTimeBoundaryStrategy, getWindowForInstant } from 'day-boundary';
 
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: 'Europe/London',
@@ -110,39 +26,178 @@ console.log(window.start.toString());
 console.log(window.end.toString());
 ```
 
-## API
+If you only use one function, use `getWindowForInstant`.
 
-The main v2 surface is:
+Start with:
 
-- `BoundaryStrategy`
-- `FixedTimeBoundaryStrategy`
-- `DailyBoundaryStrategy`
-- `getWindowForInstant`
-- `getWindowForZonedDateTime`
-- `getWindowForPlainDateTime`
-- `getWindowProgress`
-- `isSameWindow`
-- `groupByWindow`
-- `getWindowId`
+* `FixedTimeBoundaryStrategy` if your day always starts at the same local time
+* `getWindowForInstant` if you want the safest default for real timestamps
 
-Use it via the package root:
+Move to other entry points only when:
+
+* you already have a `Temporal.ZonedDateTime`
+* the user is entering a local clock time
+* the boundary changes by date and must come from a timetable or dataset
+
+---
+
+## What this solves
+
+Most systems assume a day starts at midnight.
+
+That breaks when:
+
+* shifts cross midnight
+* operations run overnight
+* reporting depends on continuity
+
+This library lets you define an **operational window** instead.
+
+A day becomes a window:
+
+```
+[boundary_n, boundary_n+1)
+```
+
+Everything else is derived from that.
+
+---
+
+## Core idea
+
+Instead of asking:
+
+> What calendar date is this?
+
+You ask:
+
+> Which operational window does this belong to?
+
+---
+
+## Critical DST behavior (read this)
+
+The core window APIs resolve boundaries correctly across DST transitions.
+
+Window duration may be 23, 24, or 25 hours depending on DST.
+
+For shift-duration calculations, the companion `day-boundary/shifts` helpers distinguish between:
+
+* **elapsed time** (real duration)
+* **wall-clock time** (local schedule)
+
+These diverge during DST transitions.
+
+Example (London, clocks go back):
+
+* Start: `00:00 BST`
+* `8 actual hours` → `07:00 GMT`
+* `00:00 → 08:00 local` → `08:00 GMT`
+
+Same “8-hour shift”, different results.
+
+This is intentional.
+
+---
+
+## When to use this
+
+Use it when:
+
+* midnight breaks your logic
+* events span across calendar days
+* you need grouping based on operational cycles
+* DST correctness matters (payroll, shifts, reporting)
+
+Avoid it when:
+
+* your system is strictly calendar-based
+* midnight is already correct
+
+---
+
+## Why not just use Temporal?
+
+Temporal tells you *what time it is*.
+
+This library tells you *which operational window that time belongs to*.
+
+---
+
+## Installation
+
+```bash
+npm install day-boundary
+```
+
+The package includes `@js-temporal/polyfill` as a dependency.
+
+---
+
+## Choosing the right entry point
+
+Start with `getWindowForInstant` unless you have a specific reason not to.
+
+Use:
+
+* `getWindowForInstant` → when you care about exact time (recommended default)
+* `getWindowForZonedDateTime` → when you already have a zoned value
+* `getWindowForPlainDateTime` → when the user provides local clock input
+
+---
+
+## Local Clock Input Example
 
 ```js
+import { Temporal } from '@js-temporal/polyfill';
 import {
-  DailyBoundaryStrategy,
   FixedTimeBoundaryStrategy,
-  getWindowForInstant,
+  getWindowForPlainDateTime,
 } from 'day-boundary';
+
+const strategy = new FixedTimeBoundaryStrategy({
+  timeZone: 'Europe/London',
+  boundaryTime: '09:00',
+});
+
+const window = getWindowForPlainDateTime(
+  Temporal.PlainDateTime.from('2026-10-25T08:30:00'),
+  strategy
+);
+
+console.log(window.start.toString());
+console.log(window.end.toString());
 ```
+
+---
+
+## API Overview
+
+Main exports:
+
+* `BoundaryStrategy`
+* `FixedTimeBoundaryStrategy`
+* `DailyBoundaryStrategy`
+* `getWindowForInstant`
+* `getWindowForZonedDateTime`
+* `getWindowForPlainDateTime`
+* `getWindowProgress`
+* `isSameWindow`
+* `groupByWindow`
+* `getWindowId`
+
+Window IDs are stable across DST transitions and safe for grouping and persistence.
 
 See:
 
-- [V2-USAGE.md](./V2-USAGE.md) for v2 examples
-- [V2-API.md](./V2-API.md) for the detailed v2 design spec
+* `V2-USAGE.md` for examples
+* `V2-API.md` for full specification
 
-## Companion Shift Layer
+---
 
-A small companion layer now exists for shift-specific DST questions:
+## Shift semantics (DST-sensitive)
+
+Separate layer:
 
 ```js
 import {
@@ -152,59 +207,23 @@ import {
 } from 'day-boundary/shifts';
 ```
 
-This layer is intentionally outside the core boundary engine.
+Use:
 
-It is for business rules such as:
+* elapsed duration → payroll, fatigue, actual hours
+* wall-clock duration → schedules, schedule sign-off
 
-- "sign off after 8 actual hours"
-- "sign off at 08:00 local rota time"
+These can differ on DST transition days.
 
-Those can diverge on DST transition days.
+---
 
-## Shift Work and DST
+## Examples
 
-For shift workers, healthcare, and hospital care, DST days introduce an important distinction:
+Included browser examples:
 
-- `elapsed-duration shift`: the worker signs off after a fixed amount of real elapsed time
-- `wall-clock scheduled shift`: the worker signs off at the scheduled local clock time
-
-These are not the same on DST transition days.
-
-Example in London when clocks go back on Sunday, October 25, 2026:
-
-- shift start: `00:00 BST`
-- if the rule is `8 actual hours`, sign-off is `07:00 GMT`
-- if the rule is `00:00 -> 08:00 local`, sign-off is `08:00 GMT`
-
-So a nominal "8-hour shift" can mean:
-
-- `8` real elapsed hours
-- or `8` labeled local clock hours on the rota
-
-The library's v2 direction is built so both interpretations can be modeled clearly:
-
-- `Temporal.Instant` for exact elapsed-time rules
-- `Temporal.ZonedDateTime` for local schedule rules
-
-This matters in domains like:
-
-- nurse and doctor shifts
-- hospital handovers
-- overnight care staffing
-- security and transport shifts
-- factory and logistics rosters
-
-## Toy App
-
-A simple example is included in:
-
-`examples/day-boundary-toy-app/index.html`
-
-It demonstrates:
-
-* a fixed daily boundary at 09:00
-* live window calculation
-* grouping events across boundaries
+* **Toy App** → basic boundary behavior
+* **DST Toy App** → DST transitions and day length
+* **Shift Toy App** → elapsed vs wall-clock differences
+* **Hijri POC** → real-world shifting boundaries using calendar and prayer-time data
 
 Run locally:
 
@@ -212,112 +231,27 @@ Run locally:
 python -m http.server 8000
 ```
 
-Open:
-
-[http://localhost:8000/examples/day-boundary-toy-app/](http://localhost:8000/examples/day-boundary-toy-app/)
-
-## Dataset-backed Example
-
-A browser example backed by real CSV data is included in:
-
-`examples/day-boundary-hijri-poc/index.html`
-
-It demonstrates:
-
-- a shifting boundary loaded from a dataset
-- navigation across resolved day windows
-- date and timestamp lookup
-- one real use case running on the v2 `Temporal`-based path
-
-Run locally:
-
-```bash
-python -m http.server 8000
-```
-
-Open:
-
-[http://localhost:8000/examples/day-boundary-hijri-poc/](http://localhost:8000/examples/day-boundary-hijri-poc/)
-
-## DST Toy App
-
-A browser example focused on region, DST, and day duration is included in:
-
-`examples/day-boundary-dst-toy-app/index.html`
-
-It demonstrates:
-
-- explicit global location selection
-- DST transitions in temperate zones
-- near-polar and equatorial comparison points
-- fixed boundary window duration inspection
-- nearby day-duration comparison around zone changes
-
-Open:
-
-[http://localhost:8000/examples/day-boundary-dst-toy-app/](http://localhost:8000/examples/day-boundary-dst-toy-app/)
-
-## Shift Toy App
-
-A browser example focused on shift sign-off rules is included in:
-
-`examples/day-boundary-shift-toy-app/index.html`
-
-It demonstrates:
-
-- exact elapsed-duration sign-off versus wall-clock scheduled sign-off
-- fixed location selection across global regions
-- preset DST-sensitive scenarios for London and New York
-- a no-DST baseline for comparison
-- why a shift can end at different local times depending on the rule
-
-Open:
-
-[http://localhost:8000/examples/day-boundary-shift-toy-app/](http://localhost:8000/examples/day-boundary-shift-toy-app/)
+---
 
 ## Design constraints
 
-* v2 is the main path and uses `Temporal` plus `@js-temporal/polyfill`
-* Strategy-driven
-* Pure computation functions
+* Uses `Temporal`
+* Requires explicit IANA time zones
+* Does not assume 24-hour days
+* Pure computation (no hidden state)
+
+---
 
 ## Limitations
 
-You must be able to resolve a boundary for any given date.
+* Boundary must be resolvable for a given date
+* Shifting boundaries must provide adjacent dates
+* Requires Temporal polyfill in browsers
 
-For shifting boundaries, this usually means providing:
-
-* the previous day
-* the current day
-* the next day
-
-If a boundary is missing, resolution fails by design.
-
-For v2 specifically:
-
-- you must provide explicit IANA time zones
-- browser usage needs the Temporal polyfill setup until native support is broad enough
-- calendar labeling still belongs outside the core library
-
-## When to use this
-
-Use it when:
-
-* midnight breaks your logic
-* events span across calendar days
-* you need grouping based on operational cycles
-
-Avoid it when:
-
-* your system is strictly calendar-based
-* midnight is already the correct boundary
+---
 
 ## Summary
 
 This is not a date utility.
 
-It is a way to redefine what a day means, so the rest of your system does not have to.
-
-## Legal
-
-This project is copyright-owned by Gazali Ahmad, and The Right Business Pte Ltd is associated with the project by permission of the copyright owner. See [IP-NOTICE.md](./IP-NOTICE.md).
+It is a way to define what a day means, so your system stays consistent.
