@@ -4,7 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project aims to follow Semantic Versioning.
 
-## [Unreleased]
+Note: the historical `1.0.0` section below documents the internal baseline for the archived v1 API line. It was not published as a package release. The first public package release was `2.0.0`.
+
+## [2.1.1] - 2026-04-22
+
+### Changed
+
+- Reorganized the longer-form documentation into `guides/`, moving the v2 usage/API docs, archived v1 usage guide, functions reference, and use-case material into a single documentation area with normalized filenames.
+- Added a `guides/README.md` index and updated `README.md`, `ROADMAP.md`, and package-published file paths to align with the new documentation structure.
+- Tightened the documentation split so business framing lives in `guides/business-use-cases.md`, implementation guidance lives in `guides/sql-dst-safe-queries.md`, and API usage/reference remain separate.
+- Standardized guide markup, cross-links, heading capitalization, and human-readable Markdown link labels across `README.md` and the `guides/` set for better consistency and navigation.
+- Added a delivery-operations browser example alongside the shift attendance toy app, showing rider online/offline windows, inferred closure, and post-window time handling with `day-boundary/shifts`.
+- Kept browser examples in the GitHub repository while removing `examples/` from the published npm tarball, with `README.md` updated to use direct GitHub links for the hosted demos.
+
+## [2.1.0] - 2026-04-21
+
+### Added
+
+- `resolveShiftStart(...)` in the v2 shifts companion layer for configurable start-tolerance handling around a shift boundary.
+- `resolveShiftEnd(...)` in the v2 shifts companion layer for late log-off classification, missing log-off inference, and neutral time-beyond-scheduled-end measurement from scheduled shift end.
+- Runtime validation for `startTolerance.before` and `startTolerance.after` using `Temporal.Duration`, including overlap protection so large tolerance windows cannot blur adjacent shift starts.
+- Runtime validation for end-of-shift policy durations, including inference requirements for `missingLogOff.autoCloseAfter`.
+- Strict package-wide declaration files in `index.d.ts` and `shifts.d.ts`, keeping the package in JavaScript while providing Temporal-only TypeScript contracts for both `day-boundary` and `day-boundary/shifts`.
+- Test coverage for early arrivals, exact-boundary starts, late arrivals, outside-tolerance behavior, DST-safe early reassignment, overlap rejection on short DST days, late log-off handling, missing log-off inference, and post-end time measured from scheduled shift end.
+
+### Changed
+
+- Shift-start assignment now prioritizes exact elapsed-time comparisons via `Temporal.Instant`, keeping early and late tolerance handling DST-safe.
+- End-of-shift resolution now separates attendance completion status from downstream payroll interpretation, with inferred log-off handling kept distinct from actual post-end time.
+- Split the shifts companion implementation into focused internal modules under `lib/shifts/` for shared validation, start resolution, end resolution, and shift-ending calculations, while preserving `lib/day-boundary-shifts-v2.js` as the stable public entry point.
+- Kept the archived v1 API line in the repository as historical reference, while leaving it outside the published npm package.
+- Updated `README.md`, `V2-USAGE.md`, and `FUNCTIONS.md` to document the new shift start/end helpers and package-wide type declarations.
+- Wired `package.json` exports and published files so editors and TypeScript consumers resolve `index.d.ts` for `day-boundary` and `shifts.d.ts` for `day-boundary/shifts`, with `lib/shifts/` included in the published package for the current layout.
 
 ## [2.0.2] - 2026-04-21
 
@@ -42,18 +73,18 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 ### Changed
 
 - Promoted v2 to the main recommended API for new work.
-- Kept v1 as a legacy compatibility path for existing `Date`-based usage.
+- Kept the archived v1 API line available for existing `Date`-based usage.
 - Renamed the package to `day-boundary`.
-- Renamed the legacy v1 file to `lib/day-boundary-v1.js`.
+- Renamed the archived v1 API file to `lib/day-boundary-v1.js`.
 - Reorganized browser demos into the `examples/` folder.
 - Set the package root export `day-boundary` to the v2 API and kept compatibility exports for `day-boundary/v1`, `day-boundary/v2`, and `day-boundary/shifts`.
-- Expanded the docs to distinguish legacy v1 from the main v2 path, document the polyfill/browser setup, and align install guidance with package dependencies.
+- Expanded the docs to distinguish the archived v1 API line from the main v2 path, document the polyfill/browser setup, and align install guidance with package dependencies.
 - Updated package metadata with `bugs`, `homepage`, and a strict npm-style repository URL (`git+https://... .git`).
 - Refined README opening copy for faster npm-page comprehension, including a direct problem statement and use-case bullets.
 - Reduced repeated wording in the early README sections and separated project/legal wording into a dedicated `Legal` section.
 - Updated `IP-NOTICE.md` heading text to `Business association permission` for wording consistency.
 
-## [1.0.0] - 2026-04-19
+## [1.0.0] - 2026-04-19 (internal only, not published)
 
 ### Added
 

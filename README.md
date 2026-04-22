@@ -7,6 +7,16 @@ That is the default entry point if you need to answer:
 
 > Which operational window does this exact timestamp belong to?
 
+Golden path:
+
+* define a boundary strategy
+* resolve a `[start, end)` operational window
+* query exact instants using that window range
+
+In plain terms:
+
+If your business day starts at `09:00` in London, this library helps you turn any exact timestamp into the correct operational window, then use `window.start` and `window.end` to query records, group reports, or assign work consistently.
+
 ---
 
 ## Quick Start (2 minutes)
@@ -85,6 +95,8 @@ For shift-duration calculations, the companion `day-boundary/shifts` helpers dis
 
 * **elapsed time** (real duration)
 * **wall-clock time** (local schedule)
+* **start tolerance windows** (business-defined early/late clock-in handling)
+* **end-of-shift classification** (late log-off, missing log-off, and time beyond scheduled end)
 
 These diverge during DST transitions.
 
@@ -131,6 +143,21 @@ npm install day-boundary
 ```
 
 The package includes `@js-temporal/polyfill` as a dependency.
+
+TypeScript consumers get strict declaration files for both:
+
+* `day-boundary`
+* `day-boundary/shifts`
+
+The typed API is Temporal-only:
+
+* `Temporal.Instant`
+* `Temporal.ZonedDateTime`
+* `Temporal.PlainDateTime`
+* `Temporal.PlainTime`
+* `Temporal.Duration`
+
+Legacy `Date`, string timestamps, and numeric timestamps are not part of the typed contract.
 
 ---
 
@@ -190,8 +217,13 @@ Window IDs are stable across DST transitions and safe for grouping and persisten
 
 See:
 
-* `V2-USAGE.md` for examples
-* `V2-API.md` for full specification
+* [Documentation index](./guides/README.md) for the full documentation map
+* [V2 usage](./guides/v2-usage.md) for examples
+* [V2 API](./guides/v2-api.md) for the full specification
+* [Functions reference](./guides/functions-reference.md) for the compact reference sheet
+* [SQL DST-safe queries](./guides/sql-dst-safe-queries.md) for the implementation query pattern
+* [Business use cases](./guides/business-use-cases.md) for business framing
+* [Use cases](./guides/use-cases.md) for positioning and fit
 
 ---
 
@@ -204,6 +236,8 @@ import {
   getShiftEndByElapsedDuration,
   getShiftEndByWallClockDuration,
   compareShiftEndings,
+  resolveShiftStart,
+  resolveShiftEnd,
 } from 'day-boundary/shifts';
 ```
 
@@ -211,25 +245,94 @@ Use:
 
 * elapsed duration → payroll, fatigue, actual hours
 * wall-clock duration → schedules, schedule sign-off
+* start tolerance windows → early/late arrivals around shift start
+* end-of-shift classification → late log-off, missing log-off, and time beyond scheduled end from the configured shift-end rule
 
 These can differ on DST transition days.
+
+Example:
+
+```js
+import { Temporal } from '@js-temporal/polyfill';
+import { FixedTimeBoundaryStrategy } from 'day-boundary';
+import { resolveShiftStart } from 'day-boundary/shifts';
+
+const strategy = new FixedTimeBoundaryStrategy({
+  timeZone: 'Asia/Singapore',
+  boundaryTime: '08:00',
+});
+
+const result = resolveShiftStart(
+  Temporal.ZonedDateTime.from('2026-04-19T07:50:00+08:00[Asia/Singapore]'),
+  strategy,
+  {
+    startTolerance: {
+      before: Temporal.Duration.from({ minutes: 15 }),
+      after: Temporal.Duration.from({ minutes: 15 }),
+    },
+  }
+);
+
+console.log(result.classification);     // early-within-tolerance
+console.log(result.assignmentAdjusted); // true
+console.log(result.window.start.toString());
+```
+
+`before` and `after` are business-defined. The helper compares exact instants so tolerance handling stays DST-safe.
+
+```js
+import { Temporal } from '@js-temporal/polyfill';
+import { resolveShiftEnd } from 'day-boundary/shifts';
+
+const result = resolveShiftEnd(
+  Temporal.ZonedDateTime.from('2026-04-19T18:30:00+08:00[Asia/Singapore]'),
+  Temporal.ZonedDateTime.from('2026-04-19T17:00:00+08:00[Asia/Singapore]'),
+  {
+    lateLogOffTolerance: {
+      after: Temporal.Duration.from({ minutes: 15 }),
+    },
+    overtime: {
+      startsAfter: Temporal.Duration.from({ minutes: 0 }),
+    },
+  }
+);
+
+console.log(result.completionStatus);      // late-log-off
+console.log(result.overtime.hasOvertime);  // true
+console.log(result.overtime.duration.toString());
+```
+
+`resolveShiftEnd(...)` keeps attendance completion status separate from any payroll interpretation. The `overtime` field here is a neutral measure of time beyond scheduled end. Inferred missing log-off handling does not create that extra time by default.
+
+The field name remains `overtime` for API stability. In this library it is a neutral post-end measurement, not a payroll or legal classification by itself.
 
 ---
 
 ## Examples
 
-Included browser examples:
+Browser examples are available in the GitHub repository and are not included in the published npm package.
 
-* **Toy App** → basic boundary behavior
-* **DST Toy App** → DST transitions and day length
-* **Shift Toy App** → elapsed vs wall-clock differences
-* **Hijri POC** → real-world shifting boundaries using calendar and prayer-time data
+Available examples:
 
-Run locally:
+* [Toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-toy-app) → basic boundary behavior
+* [DST toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-dst-toy-app) → DST transitions and day length
+* [Shift toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-shift-toy-app) → elapsed vs wall-clock differences
+* [Shift attendance toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-shift-attendance-toy-app) → start tolerance, late log-off, missing log-off inference, and time beyond scheduled end
+* [Delivery shift toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-delivery-shift-toy-app) → rider online/offline windows, inferred route closure, and time beyond the scheduled service window
+* [Hijri POC](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-hijri-poc) → real-world shifting boundaries using calendar and prayer-time data
+
+To run them locally from the repository root:
 
 ```bash
 python -m http.server 8000
 ```
+
+More guides:
+
+* [Examples README](https://github.com/GazaliAhmad/day-boundary/blob/main/examples/README.md) for local example URLs
+* [Documentation index](./guides/README.md) for the full documentation map
+* [SQL DST-safe queries](./guides/sql-dst-safe-queries.md) for implementation guidance
+* [Business use cases](./guides/business-use-cases.md) for business use-case framing
 
 ---
 

@@ -1,4 +1,4 @@
-# V2 Functions Reference
+# V2 functions reference
 
 This file lists the functions and classes currently defined in the v2 source.
 
@@ -8,9 +8,15 @@ It includes:
 - internal helper functions used inside the main v2 library
 - the v2 shifts companion functions
 
-It does not cover the archived v1 API.
+It does not cover the archived v1 API line.
 
-## Public API Table
+Related guides:
+
+- [V2 Usage](./v2-usage.md) for practical examples
+- [V2 API](./v2-api.md) for the formal API contract
+- [Archived v1 Usage](./v1-usage-archive.md) for the older `Date`-based line
+
+## Public API table
 
 | Library | Name | Kind | Exported from | Notes |
 | --- | --- | --- | --- | --- |
@@ -27,8 +33,10 @@ It does not cover the archived v1 API.
 | Shifts v2 | `getShiftEndByElapsedDuration` | function | `day-boundary/shifts` | Exact elapsed-time shift ending |
 | Shifts v2 | `getShiftEndByWallClockDuration` | function | `day-boundary/shifts` | Wall-clock scheduled shift ending |
 | Shifts v2 | `compareShiftEndings` | function | `day-boundary/shifts` | Compare elapsed and wall-clock results |
+| Shifts v2 | `resolveShiftStart` | function | `day-boundary/shifts` | Resolve a shift start against business-defined early/late tolerance windows |
+| Shifts v2 | `resolveShiftEnd` | function | `day-boundary/shifts` | Resolve end-of-shift status, missing log-off inference, and time beyond scheduled end |
 
-## Main v2 Library — Internal Source Helpers and Functions
+## Main v2 library — internal source helpers and functions
 
 These functions are defined in `lib/day-boundary-v2.js`.
 
@@ -70,7 +78,7 @@ Some are public exports, while others are internal helpers used by the exported 
 
 `groupByWindow(items, getInstant, strategy)`
 
-## Main v2 Library — Classes and Methods
+## Main v2 library — classes and methods
 
 These classes are defined in `lib/day-boundary-v2.js`.
 
@@ -96,9 +104,9 @@ These classes are defined in `lib/day-boundary-v2.js`.
 
 `getWindowForInstant(instant)`
 
-## Shifts Companion Library — All Functions
+## Shifts companion library — all functions
 
-These functions are defined in `lib/day-boundary-shifts-v2.js`.
+These functions are exported from `lib/day-boundary-shifts-v2.js` and implemented in `lib/shifts/`.
 
 ### Shift duration helpers
 
@@ -108,9 +116,17 @@ These functions are defined in `lib/day-boundary-shifts-v2.js`.
 
 `compareShiftEndings(start, durationLike)`
 
-## Everything in One Consolidated List
+### Shift start tolerance helper
 
-### Total functions (main + shifts): 18
+`resolveShiftStart(eventTime, strategy, options)`
+
+### Shift end classification helper
+
+`resolveShiftEnd(logOffTime, scheduledShiftEnd, options)`
+
+## Everything in one consolidated list
+
+### Total functions (main + shifts): 20
 
 `defaultWindowLabel`
 
@@ -148,6 +164,10 @@ These functions are defined in `lib/day-boundary-shifts-v2.js`.
 
 `compareShiftEndings`
 
+`resolveShiftStart`
+
+`resolveShiftEnd`
+
 ### Plus 3 strategy classes
 
 `BoundaryStrategy`
@@ -160,4 +180,4 @@ These functions are defined in `lib/day-boundary-shifts-v2.js`.
 
 - Public exports from the main v2 library are the strategy classes plus `getWindowForInstant`, `getWindowForZonedDateTime`, `getWindowForPlainDateTime`, `getWindowProgress`, `getWindowId`, `isSameWindow`, and `groupByWindow`.
 - `defaultWindowLabel`, `toInstant`, `toPlainDateTime`, `toPlainTime`, `validateTimeZone`, `validateDisambiguation`, `plainDateTimeToZonedDateTime`, and `validateStrategy` are internal helpers, not part of the published root export list.
-- Public exports from the shifts companion library are `getShiftEndByElapsedDuration`, `getShiftEndByWallClockDuration`, and `compareShiftEndings`.
+- Public exports from the shifts companion library are `getShiftEndByElapsedDuration`, `getShiftEndByWallClockDuration`, `compareShiftEndings`, `resolveShiftStart`, and `resolveShiftEnd`.

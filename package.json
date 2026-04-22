@@ -1,27 +1,39 @@
 {
   "name": "day-boundary",
-  "version": "2.0.2",
-  "description": "JavaScript library for non-midnight operational day boundaries, DST-safe window resolution, and shift-aware time-zone logic.",
+  "version": "2.1.1",
+  "description": "JavaScript library for non-midnight operational day boundaries, DST-safe Temporal window resolution, and shift-aware time-zone logic.",
   "type": "module",
   "main": "./lib/day-boundary-v2.js",
+  "types": "./index.d.ts",
   "exports": {
-    ".": "./lib/day-boundary-v2.js",
-    "./v2": "./lib/day-boundary-v2.js",
-    "./shifts": "./lib/day-boundary-shifts-v2.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./lib/day-boundary-v2.js"
+    },
+    "./v2": {
+      "types": "./index.d.ts",
+      "default": "./lib/day-boundary-v2.js"
+    },
+    "./shifts": {
+      "types": "./shifts.d.ts",
+      "default": "./lib/day-boundary-shifts-v2.js"
+    }
   },
   "files": [
+    "index.d.ts",
+    "shifts.d.ts",
     "lib/day-boundary-v2.js",
     "lib/day-boundary-shifts-v2.js",
-    "examples/",
+    "lib/shifts/",
     "README.md",
-    "FUNCTIONS.md",
+    "LICENSE",
     "IP-NOTICE.md",
     "CHANGELOG.md",
-    "V2-API.md",
-    "V2-USAGE.md"
+    "guides/"
   ],
   "scripts": {
-    "test": "node test/run-tests.js"
+    "test": "node test/run-tests.js",
+    "typecheck": "tsc -p tsconfig.types.json"
   },
   "keywords": [
     "temporal",
@@ -33,6 +45,7 @@
     "reporting-window",
     "time-window",
     "shift-scheduling",
+    "attendance",
     "payroll"
   ],
   "repository": {
@@ -46,5 +59,8 @@
   "license": "MIT",
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

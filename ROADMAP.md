@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap reflects the current state of `day-boundary` after the `2.0.0` release.
+This roadmap reflects the current state of `day-boundary` after the `2.1.0` release.
 
 The library is now positioned as:
 
@@ -16,10 +16,10 @@ The current direction is:
 The repo already includes:
 
 - a main v2 API in [lib/day-boundary-v2.js](./lib/day-boundary-v2.js)
-- a companion shift layer in [lib/day-boundary-shifts-v2.js](./lib/day-boundary-shifts-v2.js)
+- a companion shift layer exported from [lib/day-boundary-shifts-v2.js](./lib/day-boundary-shifts-v2.js) with internal modules in `lib/shifts/`
 - a test suite covering boundary windows, DST-sensitive behavior, and shift semantics
 - browser examples in [examples/](./examples/)
-- npm packaging metadata for `day-boundary@2.0.0`
+- npm packaging metadata for `day-boundary@2.1.0`
 
 The package surface is currently:
 
@@ -46,7 +46,7 @@ The library is not responsible for:
 - embedding domain-specific business meaning into the core API
 - replacing downstream application logic
 
-Use [use-cases.md](./use-cases.md) as the filter for future additions.
+Use [guides/use-cases.md](./guides/use-cases.md) as the filter for future additions.
 
 ## Core Direction
 
@@ -73,6 +73,7 @@ The current example suite is:
 - [examples/day-boundary-hijri-poc/index.html](./examples/day-boundary-hijri-poc/index.html)
 - [examples/day-boundary-dst-toy-app/index.html](./examples/day-boundary-dst-toy-app/index.html)
 - [examples/day-boundary-shift-toy-app/index.html](./examples/day-boundary-shift-toy-app/index.html)
+- [examples/day-boundary-shift-attendance-toy-app/index.html](./examples/day-boundary-shift-attendance-toy-app/index.html)
 
 These examples currently validate:
 
@@ -82,6 +83,9 @@ These examples currently validate:
 - DST-aware day duration behavior
 - global time-zone behavior
 - elapsed-duration versus wall-clock shift semantics
+- start-tolerance handling around shift boundaries
+- missing log-off inference
+- neutral time-beyond-scheduled-end measurement for post-shift attendance
 
 ## Next Priorities
 
@@ -96,6 +100,7 @@ Focus areas:
 - document expected error types more explicitly
 - standardize wording for invalid boundary resolution failures
 - keep examples clear about what throws and why
+- keep the `guides/` set consistent in scope, so usage, API contract, implementation guidance, and positioning stay clearly separated
 
 ### 2. Real-world example coverage
 
@@ -166,6 +171,13 @@ The documentation should continue to reinforce:
 - `day-boundary` is the main v2 entry point
 - `day-boundary/shifts` is a companion layer
 - the library is a boundary engine, not a general date library
+
+The documentation structure should stay organized under [guides/](./guides/), with a clear split between:
+
+- usage guides such as [guides/v2-usage.md](./guides/v2-usage.md)
+- API and reference documents such as [guides/v2-api.md](./guides/v2-api.md) and [guides/functions-reference.md](./guides/functions-reference.md)
+- implementation guidance such as [guides/sql-dst-safe-queries.md](./guides/sql-dst-safe-queries.md)
+- positioning and fit documents such as [guides/use-cases.md](./guides/use-cases.md) and [guides/business-use-cases.md](./guides/business-use-cases.md)
 
 ## Milestones
 

@@ -1,18 +1,24 @@
-# Legacy v1 Usage (Archived)
+# Archived v1 API usage
 
-This file documents the legacy v1 API exported by `lib/day-boundary-v1.js`.
+This file documents the archived v1 API line exported by `lib/day-boundary-v1.js`.
 
-It is retained as an archive reference. For all new work, use [V2-USAGE.md](./V2-USAGE.md).
+It is retained as an archive reference. For all new work, use [V2 usage](./v2-usage.md).
+
+Related guides:
+
+- [V2 Usage](./v2-usage.md) for the current recommended API
+- [V2 API](./v2-api.md) for the current API contract
+- [Functions Reference](./functions-reference.md) for the current symbol inventory
 
 If you are starting new work, use v2 instead:
 
-- [V2-USAGE.md](./V2-USAGE.md) for the main recommended API
+- [V2 usage](./v2-usage.md) for the main recommended API
 - `day-boundary` for explicit time-zone-aware boundary resolution
 - `day-boundary/shifts` for companion shift-duration helpers
 
-Use this file when you need the older `Date`-based compatibility path.
+Use this file only when you need the older `Date`-based compatibility path.
 
-## Legacy v1 Import
+## Legacy v1 import
 
 ```js
 import {
@@ -264,4 +270,4 @@ console.log(reportRows);
 - `dateLike` values can be `Date`, date strings, or timestamps accepted by `new Date(...)`.
 - `DailyBoundaryStrategy` requires you to resolve the boundary for the previous day, current day, and next day around the timestamp being checked.
 - If a boundary cannot be resolved, the library throws by design.
-- For explicit time zones, DST-safe windows, and non-24-hour day handling, prefer v2 in [V2-USAGE.md](./V2-USAGE.md).
+- For explicit time zones, DST-safe windows, and non-24-hour day handling, prefer v2 in [V2 usage](./v2-usage.md).

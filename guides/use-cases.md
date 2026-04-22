@@ -1,6 +1,12 @@
-# Use Cases
+# Use cases
 
 This document describes where the library is strongest, where it is situational, and where it is unnecessary.
+
+Related guides:
+
+- [V2 Usage](./v2-usage.md) for the main implementation path
+- [Business Use Cases](./business-use-cases.md) for a business-oriented explanation of the strongest scenarios
+- [SQL DST-Safe Queries](./sql-dst-safe-queries.md) for the concrete querying pattern
 
 The library is most valuable when all three are true:
 
@@ -10,7 +16,7 @@ The library is most valuable when all three are true:
 
 If any one of those is missing, the library may be more abstraction than value.
 
-## Strong Use Cases
+## Strong use cases
 
 These are the best fits for the library because they combine non-midnight boundaries with repeated business logic and meaningful downside if the rule is wrong.
 
@@ -103,7 +109,7 @@ What the library provides:
 - cleaner batch continuity
 - less custom boundary logic in reporting layers
 
-## Medium-strength Use Cases
+## Medium-strength use cases
 
 These can benefit from the library, but in some systems a simpler implementation may still be enough.
 
@@ -161,7 +167,7 @@ Why it is only medium-strength:
 - in many implementations this remains internal platform logic
 - not every team needs a general-purpose reusable abstraction
 
-## Weak Use Cases
+## Weak use cases
 
 These are usually poor fits for the library.
 
@@ -186,7 +192,7 @@ Why it is weak:
 - many apps do not have operational day semantics at all
 - adding a boundary abstraction would increase complexity without clear payoff
 
-## Best Case For The Library
+## Best case for the library
 
 The best case for the library is not "general time handling."
 
@@ -200,7 +206,7 @@ That framing is narrower, but stronger:
 - it explains why the abstraction exists
 - it separates the library from generic date utilities
 
-## Positioning Summary
+## Positioning summary
 
 The library is strongest when it is used as:
 
@@ -214,7 +220,7 @@ It is not intended to be:
 - a generic date utility
 - a replacement for application-specific business rules
 
-## Bottom Line
+## Bottom line
 
 The library addresses a recurring boundary problem that becomes expensive when repeated across reporting, auditing, staffing, payouts, or operational dashboards.
 
@@ -223,3 +229,5 @@ That is a credible place for a small library:
 - narrow enough to stay clear
 - broad enough to be reused
 - concrete enough to solve real pain
+
+For implementation details after deciding the library is a fit, continue with [V2 Usage](./v2-usage.md).

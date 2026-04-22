@@ -1,8 +1,14 @@
-# V2 API Spec
+# V2 API
 
 This document defines the v2 API for `day-boundary`.
 
 The goal of v2 is to make the library truly global by moving from `Date`-based local assumptions to `Temporal`-based, time-zone-aware window resolution.
+
+Related guides:
+
+- [V2 Usage](./v2-usage.md) for practical usage examples
+- [Functions Reference](./functions-reference.md) for the symbol inventory
+- [Use Cases](./use-cases.md) for positioning and fit
 
 ## Design goals
 
@@ -31,7 +37,7 @@ A boundary window is the interval:
 
 In v2, boundaries are resolved in an explicit IANA time zone and returned as `Temporal.ZonedDateTime`.
 
-Proposed shape:
+Shape:
 
 ```ts
 type BoundaryWindow = {
@@ -59,7 +65,7 @@ v2 distinguishes between:
 - wall-clock local date/time: `Temporal.PlainDateTime`
 - zone-aware exact/local value: `Temporal.ZonedDateTime`
 
-The library should do its core comparison, grouping, and progress calculations using exact time semantics.
+The library does its core comparison, grouping, and progress calculations using exact time semantics.
 
 ## Package entry
 
@@ -95,7 +101,7 @@ Use when the boundary is the same wall-clock time every day in a given zone.
 ```ts
 new FixedTimeBoundaryStrategy({
   timeZone: string,
-  boundaryTime: string | Temporal.PlainTime,
+  boundaryTime: Temporal.PlainTime,
   label?: string,
   disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject',
 })
@@ -106,7 +112,7 @@ Example:
 ```js
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: 'Europe/London',
-  boundaryTime: '09:00',
+  boundaryTime: Temporal.PlainTime.from('09:00'),
   label: 'operational-day',
 });
 ```
@@ -293,7 +299,7 @@ Example:
 
 ## DST and time zone behavior
 
-v2 must explicitly support:
+v2 explicitly supports:
 
 - IANA time zones such as `Asia/Singapore`, `Europe/London`, `America/New_York`
 - DST transitions
@@ -310,12 +316,14 @@ Rules:
 - Exact-time calculations should compare instants, not wall-clock fields.
 - Public APIs should avoid offset math and rely on Temporal's zone resolution behavior.
 
-## Shift Semantics
+## Shift semantics
 
 For shift-based domains such as hospitals, nursing care, transport, and factory work, v2 must keep two distinct meanings separate:
 
 - `elapsed duration`
 - `wall-clock schedule`
+- `start tolerance windows`
+- `end-of-shift classification`
 
 These diverge on DST transition days.
 
@@ -332,9 +340,27 @@ Implication for library consumers:
 
 This distinction should remain explicit in examples, docs, and any future higher-level scheduling helpers built on top of the boundary library.
 
+### Companion shift helpers
+
+The companion `day-boundary/shifts` entry point now includes:
+
+- `getShiftEndByElapsedDuration(start, duration)`
+- `getShiftEndByWallClockDuration(start, duration)`
+- `compareShiftEndings(start, duration)`
+- `resolveShiftStart(eventTime, strategy, options)`
+- `resolveShiftEnd(logOffTime, scheduledShiftEnd, options)`
+
+Rules:
+
+- shift helper inputs should use Temporal objects only in the typed API
+- start tolerance values use `Temporal.Duration` and compare exact instants around the boundary start
+- end-of-shift rules use `Temporal.Duration` and compare exact instants from scheduled shift end
+- the `overtime` field represents time beyond scheduled end, starting from scheduled shift end or from `scheduledShiftEnd + overtime.startsAfter` when a threshold is configured
+- inferred missing log-off handling should stay separate from confirmed post-end time
+
 ## Error behavior
 
-v2 should throw when:
+v2 throws when:
 
 - a strategy is invalid
 - a required time zone is missing or invalid
@@ -380,18 +406,9 @@ v2:
 - `DailyBoundaryStrategy` remains conceptually the same but now resolves boundaries with `Temporal`
 - `groupByWindow`, `isSameWindow`, `getWindowProgress`, and `getWindowId` keep similar roles
 
-## Open questions
+## Design decisions
 
-These points should be decided before implementation:
-
-1. Should the package ship with the `@js-temporal/polyfill` as a peer dependency, direct dependency, or leave it to the consumer?
-2. Should `groupByWindow` support optional sorting by window start?
-3. Should there be a small companion package for label mapping patterns, or should that stay fully application-side?
-4. Should there be additional helper overloads for convenience, outside the strict Temporal-only core?
-
-## Decisions made
-
-The following design decisions are now locked in for v2:
+The following design decisions define the current v2 line:
 
 1. `BoundaryWindow.start` and `BoundaryWindow.end` use `Temporal.ZonedDateTime`.
 2. Exact comparisons and duration math use `toInstant()` semantics internally.
@@ -399,11 +416,11 @@ The following design decisions are now locked in for v2:
 
 ## Current recommendation
 
-The current implementation direction is:
+The current implementation is:
 
 - core window values use `Temporal.ZonedDateTime`
 - exact comparisons use `toInstant()`
 - input helpers accept Temporal objects only
 - zone and DST handling are explicit
 - calendar labeling remains outside core
-- core APIs prefer `Temporal.PlainTime` or `Temporal` objects where practical, with string parsing limited to convenience entry points
+- core APIs prefer Temporal objects in the typed public surface, with strict declaration files for `day-boundary` and `day-boundary/shifts`
