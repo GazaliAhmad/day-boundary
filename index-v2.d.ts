@@ -55,13 +55,6 @@ export interface BoundaryWindowGroup<T> {
   readonly items: T[];
 }
 
-export interface BoundaryEndComparison {
-  readonly elapsedEnd: Temporal.ZonedDateTime;
-  readonly wallClockEnd: Temporal.ZonedDateTime;
-  readonly sameInstant: boolean;
-  readonly differenceMinutes: number;
-}
-
 export declare abstract class BoundaryStrategy {
   protected readonly __dayBoundaryBrand: symbol;
   readonly timeZone: string;
@@ -114,21 +107,6 @@ export declare function getWindowProgress(
   instant: ExactTime,
   window: BoundaryWindowIdentity,
 ): number;
-
-export declare function getWindowEndByElapsedDuration(
-  start: Temporal.ZonedDateTime,
-  duration: Temporal.Duration,
-): Temporal.ZonedDateTime;
-
-export declare function getWindowEndByWallClockDuration(
-  start: Temporal.ZonedDateTime,
-  duration: Temporal.Duration,
-): Temporal.ZonedDateTime;
-
-export declare function compareWindowEndings(
-  start: Temporal.ZonedDateTime,
-  duration: Temporal.Duration,
-): BoundaryEndComparison;
 
 export declare function getWindowId(window: BoundaryWindowIdentity): string;
 

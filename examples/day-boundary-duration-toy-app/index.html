@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Day Boundary Shift Toy App</title>
+    <title>Day Boundary Duration Toy App</title>
     <script type="importmap">
       {
         "imports": {
@@ -16,16 +16,17 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Day Boundary Shift Toy App</h1>
+      <h1>Day Boundary Duration Toy App</h1>
       <p>
-        This example compares two shift interpretations in the same time zone:
-        exact elapsed duration versus wall-clock scheduled duration.
+        This example compares two boundary-window duration interpretations in
+        the same time zone: exact elapsed duration versus wall-clock scheduled
+        duration.
       </p>
 
       <div class="card">
         <h2>Preset Scenarios</h2>
         <p class="muted">
-          Use these to jump straight to DST-sensitive shift examples or a stable
+          Use these to jump straight to DST-sensitive window examples or a stable
           non-DST baseline.
         </p>
         <div id="scenario-grid" class="scenario-grid"></div>
@@ -43,7 +44,7 @@
         <h2>Controls</h2>
         <div class="controls">
           <label class="field">
-            <span>Shift start local timestamp</span>
+            <span>Window start local timestamp</span>
             <input id="datetime-input" type="datetime-local" step="60" />
           </label>
           <label class="field">
@@ -64,7 +65,7 @@
       </div>
 
       <div class="card">
-        <h2>Shift Comparison</h2>
+        <h2>Window Duration Comparison</h2>
         <div id="status" class="mono muted">Ready.</div>
         <div class="kv kv-spaced">
           <div><strong>Location</strong></div>
@@ -76,8 +77,8 @@
           <div><strong>Time zone</strong></div>
           <div id="timezone-text" class="mono"></div>
 
-          <div><strong>Shift start</strong></div>
-          <div id="shift-start-text" class="mono"></div>
+          <div><strong>Window start</strong></div>
+          <div id="window-start-text" class="mono"></div>
 
           <div><strong>Requested duration</strong></div>
           <div id="duration-text" class="mono"></div>
@@ -112,10 +113,10 @@
     <script type="module">
       import { Temporal } from '@js-temporal/polyfill';
       import {
-        compareShiftEndings,
-        getShiftEndByElapsedDuration,
-        getShiftEndByWallClockDuration,
-      } from '../../lib/day-boundary-shifts-v2.js';
+        compareWindowEndings,
+        getWindowEndByElapsedDuration,
+        getWindowEndByWallClockDuration,
+      } from '../../lib/day-boundary.js';
 
       const LOCATIONS = [
         {
@@ -123,7 +124,7 @@
           label: 'Longyearbyen',
           country: 'Svalbard, Norway',
           timeZone: 'Europe/Oslo',
-          notes: 'High Arctic location, strong seasonal daylight shifts.',
+          notes: 'High Arctic location with strong seasonal daylight changes.',
         },
         {
           id: 'reykjavik',
@@ -180,7 +181,7 @@
         {
           id: 'london-fall-back',
           label: 'London fallback',
-          description: '8h shift during the repeated hour in October.',
+          description: '8h window during the repeated hour in October.',
           locationId: 'london',
           start: '2026-10-25T00:00',
           durationHours: 8,
@@ -189,7 +190,7 @@
         {
           id: 'london-spring-forward',
           label: 'London spring-forward',
-          description: '8h shift during the skipped hour in March.',
+          description: '8h window during the skipped hour in March.',
           locationId: 'london',
           start: '2026-03-29T00:00',
           durationHours: 8,
@@ -198,7 +199,7 @@
         {
           id: 'new-york-fall-back',
           label: 'New York fallback',
-          description: '8h overnight shift around the US autumn change.',
+          description: '8h overnight window around the US autumn change.',
           locationId: 'new-york',
           start: '2026-11-01T00:00',
           durationHours: 8,
@@ -236,7 +237,7 @@
       const locationTextEl = document.getElementById('location-text');
       const notesTextEl = document.getElementById('notes-text');
       const timezoneTextEl = document.getElementById('timezone-text');
-      const shiftStartTextEl = document.getElementById('shift-start-text');
+      const windowStartTextEl = document.getElementById('window-start-text');
       const durationTextEl = document.getElementById('duration-text');
       const transitionTextEl = document.getElementById('transition-text');
       const differenceTextEl = document.getElementById('difference-text');
@@ -343,7 +344,7 @@
         return `${formatZonedDateTimeWithOffset(transition)} — ${direction} by ${amountText}`;
       }
 
-      function shiftSpansTransition(start, end, transition) {
+      function windowSpansTransition(start, end, transition) {
         if (!transition) {
           return false;
         }
@@ -412,14 +413,14 @@
             end: elapsedEnd,
             exactElapsed: formatExactElapsed(start, elapsedEnd),
             clockSpan: formatClockSpan(start, elapsedEnd),
-            spansTransition: shiftSpansTransition(start, elapsedEnd, transition),
+            spansTransition: windowSpansTransition(start, elapsedEnd, transition),
           },
           {
             label: 'Wall-clock scheduled duration',
             end: wallClockEnd,
             exactElapsed: formatExactElapsed(start, wallClockEnd),
             clockSpan: formatClockSpan(start, wallClockEnd),
-            spansTransition: shiftSpansTransition(start, wallClockEnd, transition),
+            spansTransition: windowSpansTransition(start, wallClockEnd, transition),
           },
         ];
 
@@ -443,14 +444,14 @@
           meaningTextEl.textContent =
             `Both interpretations sign off at ${formatZonedDateTimeWithOffset(
               elapsedEnd
-            )}. This location/time combination does not create a DST-related divergence for the chosen shift.`;
+            )}. This location/time combination does not create a DST-related divergence for the chosen window.`;
           return;
         }
 
         const laterEnd = differenceMinutes > 0 ? wallClockEnd : elapsedEnd;
         const earlierEnd = differenceMinutes > 0 ? elapsedEnd : wallClockEnd;
         const laterLabel =
-          differenceMinutes > 0 ? 'wall-clock scheduled shift' : 'exact elapsed shift';
+          differenceMinutes > 0 ? 'wall-clock scheduled window' : 'exact elapsed window';
         const minutesText = `${Math.abs(differenceMinutes)} minute${
           Math.abs(differenceMinutes) === 1 ? '' : 's'
         }`;
@@ -460,15 +461,15 @@
             laterEnd
           )}, while the other interpretation ends at ${formatZonedDateTimeWithOffset(
             earlierEnd
-          )}. This is the kind of distinction hospitals, care teams, and other shift-based operations need to define explicitly.`;
+          )}. This is the kind of distinction worker schedules, factory processes, delivery windows, and other boundary-based operations need to define explicitly.`;
       }
 
       function renderAll() {
         const start = buildStartZonedDateTime();
         const duration = buildDuration();
-        const comparison = compareShiftEndings(start, duration);
-        const elapsedEnd = getShiftEndByElapsedDuration(start, duration);
-        const wallClockEnd = getShiftEndByWallClockDuration(start, duration);
+        const comparison = compareWindowEndings(start, duration);
+        const elapsedEnd = getWindowEndByElapsedDuration(start, duration);
+        const wallClockEnd = getWindowEndByWallClockDuration(start, duration);
         const transition = start.getTimeZoneTransition('next');
 
         datetimeInputEl.value = toDateTimeInputValue(state.startPlainDateTime);
@@ -478,7 +479,7 @@
         locationTextEl.textContent = `${state.location.label}, ${state.location.country}`;
         notesTextEl.textContent = state.location.notes;
         timezoneTextEl.textContent = state.location.timeZone;
-        shiftStartTextEl.textContent = formatZonedDateTimeWithOffset(start);
+        windowStartTextEl.textContent = formatZonedDateTimeWithOffset(start);
         durationTextEl.textContent = formatRequestedDuration();
         transitionTextEl.textContent = describeTransition(start, transition);
         differenceTextEl.textContent = comparison.sameInstant
@@ -486,7 +487,7 @@
           : `The two rules differ by ${Math.abs(comparison.differenceMinutes)} minute${
               Math.abs(comparison.differenceMinutes) === 1 ? '' : 's'
             }.`;
-        statusEl.textContent = `Comparing shift rules from ${formatZonedDateTimeWithOffset(
+        statusEl.textContent = `Comparing boundary duration rules from ${formatZonedDateTimeWithOffset(
           start
         )} in ${state.location.timeZone}.`;
 

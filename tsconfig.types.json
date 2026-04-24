@@ -9,6 +9,6 @@
   },
   "files": [
     "index.d.ts",
-    "shifts.d.ts"
+    "index-v2.d.ts"
   ]
 }

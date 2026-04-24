@@ -12,7 +12,7 @@ import {
   getWindowId,
   getWindowProgress,
   isSameWindow,
-} from "../lib/day-boundary-v2.js";
+} from "../../lib/ver-03/day-boundary.js";
 
 function instantFromZoned(isoString) {
   return Temporal.ZonedDateTime.from(isoString).toInstant();

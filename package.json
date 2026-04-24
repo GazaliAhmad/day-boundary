@@ -1,35 +1,33 @@
 {
   "name": "day-boundary",
-  "version": "2.1.1",
-  "description": "JavaScript library for non-midnight operational day boundaries, DST-safe Temporal window resolution, and shift-aware time-zone logic.",
+  "version": "3.0.0",
+  "description": "JavaScript library for non-midnight operational boundaries, DST-safe Temporal window resolution, and boundary-window duration logic.",
   "type": "module",
-  "main": "./lib/day-boundary-v2.js",
+  "main": "./lib/day-boundary.js",
   "types": "./index.d.ts",
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "default": "./lib/day-boundary-v2.js"
-    },
-    "./v2": {
-      "types": "./index.d.ts",
-      "default": "./lib/day-boundary-v2.js"
-    },
-    "./shifts": {
-      "types": "./shifts.d.ts",
-      "default": "./lib/day-boundary-shifts-v2.js"
+      "default": "./lib/day-boundary.js"
     }
   },
   "files": [
     "index.d.ts",
-    "shifts.d.ts",
-    "lib/day-boundary-v2.js",
-    "lib/day-boundary-shifts-v2.js",
-    "lib/shifts/",
+    "lib/day-boundary.js",
+    "lib/window-durations.js",
+    "lib/ver-03/day-boundary.js",
+    "lib/ver-03/window-durations.js",
     "README.md",
     "LICENSE",
     "IP-NOTICE.md",
     "CHANGELOG.md",
-    "guides/"
+    "guides/README.md",
+    "guides/api.md",
+    "guides/business-use-cases.md",
+    "guides/functions-reference.md",
+    "guides/sql-dst-safe-queries.md",
+    "guides/usage.md",
+    "guides/use-cases.md"
   ],
   "scripts": {
     "test": "node test/run-tests.js",
@@ -44,9 +42,9 @@
     "business-day",
     "reporting-window",
     "time-window",
-    "shift-scheduling",
-    "attendance",
-    "payroll"
+    "boundary-window",
+    "schedule-window",
+    "duration"
   ],
   "repository": {
     "type": "git",

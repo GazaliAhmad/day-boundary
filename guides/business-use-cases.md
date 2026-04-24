@@ -1,13 +1,15 @@
 # Business use cases
 
-The library is designed for systems where time is defined by local, human-defined boundaries, not fixed 24-hour durations.
+The library is designed for systems where time is defined by local,
+human-defined boundary events and the windows between them, not just fixed
+24-hour assumptions.
 
 These are the most common and high-impact scenarios.
 
 Related guides:
 
 - [Use Cases](./use-cases.md) for overall fit and positioning
-- [V2 Usage](./v2-usage.md) for implementation examples
+- [Usage](./usage.md) for implementation examples
 - [SQL DST-Safe Queries](./sql-dst-safe-queries.md) for the database-query pattern
 
 ## 1. Daily reporting and analytics
@@ -59,11 +61,11 @@ WHERE event_ts >= :start
   AND event_ts <  :end
 ```
 
-## 2. Shift scheduling and workforce operations
+## 2. Worker schedules and operating windows
 
 ### Problem
 
-Shift-based systems depend on wall-clock schedules:
+Many operational systems depend on wall-clock schedules:
 
 - "Shift starts at 00:00"
 - "Shift ends at 08:00"
@@ -81,7 +83,7 @@ This affects:
 
 ### Example
 
-A shift defined as:
+A schedule window defined as:
 
 `00:00 -> 08:00 local time`
 
@@ -92,7 +94,7 @@ On a DST change, it:
 
 ### Solution
 
-Resolve shifts as boundary windows:
+Resolve these as boundary windows:
 
 `(timeZone + boundary rule) -> [start, end)`
 
@@ -100,6 +102,7 @@ The library ensures:
 
 - correct handling of repeated or skipped times
 - accurate distinction between wall-clock schedule and elapsed duration
+- a neutral primitive that can also represent delivery waves, lesson blocks, and factory process windows
 
 ## 3. Operational cutoffs
 
@@ -153,7 +156,8 @@ If these conditions exist, the library applies.
 
 ## What is not covered
 
-The library is not intended for systems based purely on elapsed time:
+The library is not intended for systems based purely on elapsed time with no
+meaningful boundary events:
 
 `start instant + duration`
 

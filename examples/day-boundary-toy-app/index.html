@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Day Boundary Toy App</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
+          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+        }
+      }
+    </script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -44,51 +52,76 @@
     </div>
 
     <script type="module">
+      import { Temporal } from '@js-temporal/polyfill';
       import {
         DailyBoundaryStrategy,
-        getActiveWindow,
+        getWindowForInstant,
         getWindowProgress,
         groupByWindow,
-      } from '../../lib/day-boundary-v1.js';
+        getWindowId,
+      } from '../../lib/day-boundary.js';
 
-      const mockBoundaries = {
-  "2026-04-17": "18:58",
-  "2026-04-18": "18:59",
-  "2026-04-19": "19:00",
-  "2026-04-20": "19:01",
-      };
+      const TIME_ZONE = 'Asia/Singapore';
+      const BASE_DATE = Temporal.PlainDate.from('2026-04-17');
+      const BOUNDARY_CYCLE = ['18:58', '18:59', '19:00', '19:01'];
 
-      function formatKey(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}`;
+      function mod(value, divisor) {
+        return ((value % divisor) + divisor) % divisor;
       }
 
       function getBoundaryForDate(date) {
-        const key = formatKey(date);
-        const time = mockBoundaries[key];
+        const offsetDays = date.since(BASE_DATE, { largestUnit: 'day' }).days;
+        const boundaryTime = Temporal.PlainTime.from(
+          BOUNDARY_CYCLE[mod(offsetDays, BOUNDARY_CYCLE.length)]
+        );
 
-        if (!time) throw new Error(`Missing boundary for ${key}`);
-
-        const [h, m] = time.split(":").map(Number);
-        const result = new Date(date);
-        result.setHours(h, m, 0, 0);
-        return result;
+        return Temporal.ZonedDateTime.from({
+          timeZone: TIME_ZONE,
+          year: date.year,
+          month: date.month,
+          day: date.day,
+          hour: boundaryTime.hour,
+          minute: boundaryTime.minute,
+        });
       }
 
       const strategy = new DailyBoundaryStrategy({
+        timeZone: TIME_ZONE,
         getBoundaryForDate,
         label: "shifting-day",
       });
 
       const sampleEvents = [
-        { id: 'evt-1', timestamp: '2026-04-18T08:15:00', label: 'Night shift wrap-up' },
-        { id: 'evt-2', timestamp: '2026-04-18T08:50:00', label: 'Handover note filed' },
-        { id: 'evt-3', timestamp: '2026-04-18T09:10:00', label: 'Morning shift starts' },
-        { id: 'evt-4', timestamp: '2026-04-18T12:30:00', label: 'Inventory count' },
-        { id: 'evt-5', timestamp: '2026-04-19T07:40:00', label: 'Overnight inspection' },
-        { id: 'evt-6', timestamp: '2026-04-19T09:05:00', label: 'New operational day begins' },
+        {
+          id: 'evt-1',
+          instant: Temporal.ZonedDateTime.from('2026-04-18T08:15:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'Night shift wrap-up',
+        },
+        {
+          id: 'evt-2',
+          instant: Temporal.ZonedDateTime.from('2026-04-18T08:50:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'Handover note filed',
+        },
+        {
+          id: 'evt-3',
+          instant: Temporal.ZonedDateTime.from('2026-04-18T09:10:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'Morning shift starts',
+        },
+        {
+          id: 'evt-4',
+          instant: Temporal.ZonedDateTime.from('2026-04-18T12:30:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'Inventory count',
+        },
+        {
+          id: 'evt-5',
+          instant: Temporal.ZonedDateTime.from('2026-04-19T07:40:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'Overnight inspection',
+        },
+        {
+          id: 'evt-6',
+          instant: Temporal.ZonedDateTime.from('2026-04-19T09:05:00+08:00[Asia/Singapore]').toInstant(),
+          label: 'New operational day begins',
+        },
       ];
 
       const nowEl = document.getElementById('now');
@@ -102,6 +135,7 @@
 
       function formatDateTime(value) {
         return new Intl.DateTimeFormat(undefined, {
+          timeZone: TIME_ZONE,
           year: 'numeric',
           month: 'short',
           day: '2-digit',
@@ -109,30 +143,29 @@
           minute: '2-digit',
           second: '2-digit',
           hour12: false,
-        }).format(value);
+        }).format(new Date(value.epochMilliseconds));
       }
 
       function renderCurrentWindow() {
-        const now = new Date();
-        const window = getActiveWindow(now, strategy);
+        const now = Temporal.Now.instant();
+        const window = getWindowForInstant(now, strategy);
         const progress = getWindowProgress(now, window);
 
-        nowEl.textContent = formatDateTime(now);
+        nowEl.textContent = formatDateTime(now.toZonedDateTimeISO(TIME_ZONE));
         windowStartEl.textContent = formatDateTime(window.start);
         windowEndEl.textContent = formatDateTime(window.end);
-        windowIdEl.textContent =
-          `${formatDateTime(window.start)} → ${formatDateTime(window.end)}`;
+        windowIdEl.textContent = getWindowId(window);
         progressTextEl.textContent = `${(progress * 100).toFixed(2)}%`;
         progressFillEl.style.width = `${progress * 100}%`;
       }
 
       function renderGroupedEvents() {
-        const groups = groupByWindow(sampleEvents, (item) => item.timestamp, strategy);
+        const groups = groupByWindow(sampleEvents, (item) => item.instant, strategy);
 
         groupedEventsEl.innerHTML = groups
           .map(({ window, items }) => {
             const eventLines = items
-              .map((item) => `${item.timestamp} — ${item.label}`)
+              .map((item) => `${formatDateTime(item.instant.toZonedDateTimeISO(TIME_ZONE))} — ${item.label}`)
               .join('<br>');
 
             return `

@@ -1,44 +1,41 @@
-# V2 functions reference
+# Functions reference
 
-This file lists the functions and classes currently defined in the v2 source.
+This file lists the functions and classes currently defined in the source.
 
 It includes:
 
 - public API exports
-- internal helper functions used inside the main v2 library
-- the v2 shifts companion functions
+- internal helper functions used inside the main library
 
 It does not cover the archived v1 API line.
 
 Related guides:
 
-- [V2 Usage](./v2-usage.md) for practical examples
-- [V2 API](./v2-api.md) for the formal API contract
-- [Archived v1 Usage](./v1-usage-archive.md) for the older `Date`-based line
+- [Usage](./usage.md) for practical examples
+- [API](./api.md) for the formal API contract
+- [Archived v1 Usage](./ver-01/usage.md) for the older `Date`-based line
 
 ## Public API table
 
 | Library | Name | Kind | Exported from | Notes |
 | --- | --- | --- | --- | --- |
-| Main v2 | `BoundaryStrategy` | class | `day-boundary` | Base strategy interface |
-| Main v2 | `FixedTimeBoundaryStrategy` | class | `day-boundary` | Fixed daily wall-clock boundary |
-| Main v2 | `DailyBoundaryStrategy` | class | `day-boundary` | Date-dependent boundary resolver |
-| Main v2 | `getWindowForInstant` | function | `day-boundary` | Resolve a window from `Temporal.Instant` |
-| Main v2 | `getWindowForZonedDateTime` | function | `day-boundary` | Resolve a window from `Temporal.ZonedDateTime` |
-| Main v2 | `getWindowForPlainDateTime` | function | `day-boundary` | Resolve a window from `Temporal.PlainDateTime` |
-| Main v2 | `getWindowProgress` | function | `day-boundary` | Compute window progress from `0` to `1` |
-| Main v2 | `getWindowId` | function | `day-boundary` | Build a stable window identifier |
-| Main v2 | `isSameWindow` | function | `day-boundary` | Compare whether two values resolve to the same window |
-| Main v2 | `groupByWindow` | function | `day-boundary` | Group items by resolved window |
-| Shifts v2 | `getShiftEndByElapsedDuration` | function | `day-boundary/shifts` | Exact elapsed-time shift ending |
-| Shifts v2 | `getShiftEndByWallClockDuration` | function | `day-boundary/shifts` | Wall-clock scheduled shift ending |
-| Shifts v2 | `compareShiftEndings` | function | `day-boundary/shifts` | Compare elapsed and wall-clock results |
-| Shifts v2 | `resolveShiftStart` | function | `day-boundary/shifts` | Resolve a shift start against business-defined early/late tolerance windows |
-| Shifts v2 | `resolveShiftEnd` | function | `day-boundary/shifts` | Resolve end-of-shift status, missing log-off inference, and time beyond scheduled end |
+| Main | `BoundaryStrategy` | class | `day-boundary` | Base strategy interface |
+| Main | `FixedTimeBoundaryStrategy` | class | `day-boundary` | Fixed daily wall-clock boundary |
+| Main | `DailyBoundaryStrategy` | class | `day-boundary` | Date-dependent boundary resolver |
+| Main | `getWindowForInstant` | function | `day-boundary` | Resolve a window from `Temporal.Instant` |
+| Main | `getWindowForZonedDateTime` | function | `day-boundary` | Resolve a window from `Temporal.ZonedDateTime` |
+| Main | `getWindowForPlainDateTime` | function | `day-boundary` | Resolve a window from `Temporal.PlainDateTime` |
+| Main | `getWindowProgress` | function | `day-boundary` | Compute window progress from `0` to `1` |
+| Main | `getWindowEndByElapsedDuration` | function | `day-boundary` | Resolve an end by exact elapsed duration |
+| Main | `getWindowEndByWallClockDuration` | function | `day-boundary` | Resolve an end by local wall-clock duration |
+| Main | `compareWindowEndings` | function | `day-boundary` | Compare elapsed and wall-clock end results |
+| Main | `getWindowId` | function | `day-boundary` | Build a stable window identifier |
+| Main | `isSameWindow` | function | `day-boundary` | Compare whether two values resolve to the same window |
+| Main | `groupByWindow` | function | `day-boundary` | Group items by resolved window |
 
-## Main v2 library — internal source helpers and functions
+## Main library — internal source helpers and functions
 
-These functions are defined in `lib/day-boundary-v2.js`.
+These functions are exported through `lib/day-boundary.js` and implemented in `lib/ver-03/day-boundary.js`.
 
 Some are public exports, while others are internal helpers used by the exported API.
 
@@ -78,9 +75,9 @@ Some are public exports, while others are internal helpers used by the exported 
 
 `groupByWindow(items, getInstant, strategy)`
 
-## Main v2 library — classes and methods
+## Main library — classes and methods
 
-These classes are defined in `lib/day-boundary-v2.js`.
+These classes are exported through `lib/day-boundary.js` and implemented in `lib/ver-03/day-boundary.js`.
 
 ### `BoundaryStrategy`
 
@@ -104,29 +101,19 @@ These classes are defined in `lib/day-boundary-v2.js`.
 
 `getWindowForInstant(instant)`
 
-## Shifts companion library — all functions
+## Boundary duration helpers
 
-These functions are exported from `lib/day-boundary-shifts-v2.js` and implemented in `lib/shifts/`.
+These functions are exported from `lib/day-boundary.js` and implemented in `lib/ver-03/window-durations.js`.
 
-### Shift duration helpers
+`getWindowEndByElapsedDuration(start, durationLike)`
 
-`getShiftEndByElapsedDuration(start, durationLike)`
+`getWindowEndByWallClockDuration(start, durationLike)`
 
-`getShiftEndByWallClockDuration(start, durationLike)`
-
-`compareShiftEndings(start, durationLike)`
-
-### Shift start tolerance helper
-
-`resolveShiftStart(eventTime, strategy, options)`
-
-### Shift end classification helper
-
-`resolveShiftEnd(logOffTime, scheduledShiftEnd, options)`
+`compareWindowEndings(start, durationLike)`
 
 ## Everything in one consolidated list
 
-### Total functions (main + shifts): 20
+### Total functions: 18
 
 `defaultWindowLabel`
 
@@ -152,21 +139,17 @@ These functions are exported from `lib/day-boundary-shifts-v2.js` and implemente
 
 `getWindowProgress`
 
+`getWindowEndByElapsedDuration`
+
+`getWindowEndByWallClockDuration`
+
+`compareWindowEndings`
+
 `getWindowId`
 
 `isSameWindow`
 
 `groupByWindow`
-
-`getShiftEndByElapsedDuration`
-
-`getShiftEndByWallClockDuration`
-
-`compareShiftEndings`
-
-`resolveShiftStart`
-
-`resolveShiftEnd`
 
 ### Plus 3 strategy classes
 
@@ -178,6 +161,5 @@ These functions are exported from `lib/day-boundary-shifts-v2.js` and implemente
 
 ## Notes
 
-- Public exports from the main v2 library are the strategy classes plus `getWindowForInstant`, `getWindowForZonedDateTime`, `getWindowForPlainDateTime`, `getWindowProgress`, `getWindowId`, `isSameWindow`, and `groupByWindow`.
+- Public exports from the main library are the strategy classes plus `getWindowForInstant`, `getWindowForZonedDateTime`, `getWindowForPlainDateTime`, `getWindowProgress`, `getWindowEndByElapsedDuration`, `getWindowEndByWallClockDuration`, `compareWindowEndings`, `getWindowId`, `isSameWindow`, and `groupByWindow`.
 - `defaultWindowLabel`, `toInstant`, `toPlainDateTime`, `toPlainTime`, `validateTimeZone`, `validateDisambiguation`, `plainDateTimeToZonedDateTime`, and `validateStrategy` are internal helpers, not part of the published root export list.
-- Public exports from the shifts companion library are `getShiftEndByElapsedDuration`, `getShiftEndByWallClockDuration`, `compareShiftEndings`, `resolveShiftStart`, and `resolveShiftEnd`.

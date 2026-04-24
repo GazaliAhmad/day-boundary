@@ -1,22 +1,24 @@
 # Archived v1 API usage
 
-This file documents the archived v1 API line exported by `lib/day-boundary-v1.js`.
+This file documents the archived v1 API line exported by `lib/ver-01/day-boundary.js`.
 
-It is retained as an archive reference. For all new work, use [V2 usage](./v2-usage.md).
+It is retained as an archive reference. It is not part of the published npm package.
+For all new work, use [Usage](../usage.md).
 
 Related guides:
 
-- [V2 Usage](./v2-usage.md) for the current recommended API
-- [V2 API](./v2-api.md) for the current API contract
-- [Functions Reference](./functions-reference.md) for the current symbol inventory
+- [Usage](../usage.md) for the current recommended API
+- [API](../api.md) for the current API contract
+- [Functions Reference](../functions-reference.md) for the current symbol inventory
 
-If you are starting new work, use v2 instead:
+If you are starting new work, use the current API instead:
 
-- [V2 usage](./v2-usage.md) for the main recommended API
+- [Usage](../usage.md) for the main recommended API
 - `day-boundary` for explicit time-zone-aware boundary resolution
-- `day-boundary/shifts` for companion shift-duration helpers
+- root boundary-window duration helpers for elapsed-vs-wall-clock ending rules
 
 Use this file only when you need the older `Date`-based compatibility path.
+If you publish against npm, do not treat `ver-01` as a supported import path.
 
 ## Legacy v1 import
 
@@ -31,7 +33,7 @@ import {
   isSameWindow,
   groupByWindow,
   getWindowId,
-} from './lib/day-boundary-v1.js';
+} from './lib/ver-01/day-boundary.js';
 ```
 
 ## Concepts
@@ -74,7 +76,7 @@ Example: the operational day starts at `09:00`.
 import {
   FixedTimeBoundaryStrategy,
   getActiveWindow,
-} from './lib/day-boundary-v1.js';
+} from './lib/ver-01/day-boundary.js';
 
 const strategy = new FixedTimeBoundaryStrategy({
   startHour: 9,
@@ -101,7 +103,7 @@ You provide a `getBoundaryForDate(date)` function.
 import {
   DailyBoundaryStrategy,
   getActiveWindow,
-} from './lib/day-boundary-v1.js';
+} from './lib/ver-01/day-boundary.js';
 
 const boundaryByDate = {
   '2026-04-18': '18:59',
@@ -270,4 +272,4 @@ console.log(reportRows);
 - `dateLike` values can be `Date`, date strings, or timestamps accepted by `new Date(...)`.
 - `DailyBoundaryStrategy` requires you to resolve the boundary for the previous day, current day, and next day around the timestamp being checked.
 - If a boundary cannot be resolved, the library throws by design.
-- For explicit time zones, DST-safe windows, and non-24-hour day handling, prefer v2 in [V2 usage](./v2-usage.md).
+- For explicit time zones, DST-safe windows, and non-24-hour day handling, prefer the current API in [Usage](../usage.md).

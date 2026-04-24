@@ -1,8 +1,8 @@
-# V2 usage
+# Current usage
 
-This file shows how to use the v2 API exported from `day-boundary`.
+This file shows how to use the current `3.x` API exported from `day-boundary`.
 
-v2 is the explicit time-zone-aware path:
+The current API is the explicit time-zone-aware path:
 
 - uses `Temporal`
 - requires explicit IANA time zones
@@ -11,7 +11,7 @@ v2 is the explicit time-zone-aware path:
 
 Related guides:
 
-- [V2 API](./v2-api.md) for the full API contract
+- [API](./api.md) for the full API contract
 - [Functions Reference](./functions-reference.md) for the public and internal symbol inventory
 - [SQL DST-Safe Queries](./sql-dst-safe-queries.md) for database-query patterns
 - [Business Use Cases](./business-use-cases.md) for scenario framing
@@ -24,10 +24,7 @@ npm install day-boundary
 
 `day-boundary` already includes `@js-temporal/polyfill` as a dependency.
 
-The published package also includes strict declaration files for:
-
-- `day-boundary`
-- `day-boundary/shifts`
+The published package also includes a strict declaration file for `day-boundary`.
 
 The typed surface is intentionally Temporal-only. TypeScript consumers should pass Temporal objects such as `Temporal.PlainTime` and `Temporal.Duration`, not legacy `Date` values or string/number timestamps.
 
@@ -78,7 +75,7 @@ If you are serving files directly without a bundler, add an import map:
 </script>
 ```
 
-Then import both the polyfill and v2:
+Then import both the polyfill and the library:
 
 ```html
 <script type="module">
@@ -86,7 +83,7 @@ Then import both the polyfill and v2:
   import {
     FixedTimeBoundaryStrategy,
     getWindowForInstant,
-  } from './lib/day-boundary-v2.js';
+  } from './lib/day-boundary.js';
 
   const strategy = new FixedTimeBoundaryStrategy({
     timeZone: 'Asia/Singapore',
@@ -230,14 +227,15 @@ const id = getWindowId(window);
 console.log(id);
 ```
 
-## Shift work note
+## Boundary duration note
 
-If you are building for shift workers or hospital care, treat these as two separate business rules:
+If you are building worker schedules, school lessons, delivery windows, or
+factory processes, treat these as two separate rules:
 
 - `8 actual hours`
-- `00:00 -> 08:00 local schedule`
+- `00:00 -> 08:00 local wall-clock schedule`
 
-On DST days, they can produce different sign-off times.
+On DST days, they can produce different end times.
 
 Example in London when clocks go back on Sunday, October 25, 2026:
 
@@ -245,14 +243,14 @@ Example in London when clocks go back on Sunday, October 25, 2026:
 - `8 actual hours` ends at `07:00 GMT`
 - `00:00 -> 08:00 local` ends at `08:00 GMT`
 
-v2 is designed so you can represent both clearly:
+The API is designed so you can represent both clearly:
 
 - use `Temporal.Instant` when the rule is about exact elapsed duration
 - use `Temporal.ZonedDateTime` when the rule is about local scheduled wall-clock time
 
 ## Public names
 
-These are the current v2 public names:
+These are the current public names:
 
 - `BoundaryStrategy`
 - `FixedTimeBoundaryStrategy`
@@ -261,142 +259,42 @@ These are the current v2 public names:
 - `getWindowForZonedDateTime`
 - `getWindowForPlainDateTime`
 - `getWindowProgress`
+- `getWindowEndByElapsedDuration`
+- `getWindowEndByWallClockDuration`
+- `compareWindowEndings`
 - `isSameWindow`
 - `groupByWindow`
 - `getWindowId`
 
-## Companion shift helpers
+## Boundary duration helpers
 
-The repo also includes a companion shift layer:
+The root module includes neutral duration helpers:
 
 ```js
 import {
-  getShiftEndByElapsedDuration,
-  getShiftEndByWallClockDuration,
-  compareShiftEndings,
-  resolveShiftStart,
-  resolveShiftEnd,
-} from 'day-boundary/shifts';
+  getWindowEndByElapsedDuration,
+  getWindowEndByWallClockDuration,
+  compareWindowEndings,
+} from 'day-boundary';
 ```
 
 Example:
 
 ```js
 import { Temporal } from '@js-temporal/polyfill';
-import { compareShiftEndings } from 'day-boundary/shifts';
+import { compareWindowEndings } from 'day-boundary';
 
 const start = Temporal.ZonedDateTime.from(
   '2026-10-25T00:00:00+01:00[Europe/London]'
 );
 
-const result = compareShiftEndings(start, { hours: 8 });
+const result = compareWindowEndings(start, { hours: 8 });
 
 console.log(result.elapsedEnd.toString());   // 2026-10-25T07:00:00+00:00[Europe/London]
 console.log(result.wallClockEnd.toString()); // 2026-10-25T08:00:00+00:00[Europe/London]
 ```
 
-### `resolveShiftStart`
-
-Use this when the business defines an early/late arrival tolerance around a shift boundary.
-
-The tolerance is configuration, not a library default.
-
-```js
-import { Temporal } from '@js-temporal/polyfill';
-import { FixedTimeBoundaryStrategy } from 'day-boundary';
-import { resolveShiftStart } from 'day-boundary/shifts';
-
-const strategy = new FixedTimeBoundaryStrategy({
-  timeZone: 'Asia/Singapore',
-  boundaryTime: '08:00',
-});
-
-const result = resolveShiftStart(
-  Temporal.ZonedDateTime.from('2026-04-19T07:50:00+08:00[Asia/Singapore]'),
-  strategy,
-  {
-    startTolerance: {
-      before: Temporal.Duration.from({ minutes: 15 }),
-      after: Temporal.Duration.from({ minutes: 15 }),
-    },
-  }
-);
-
-console.log(result.classification);       // early-within-tolerance
-console.log(result.assignmentAdjusted);   // true
-console.log(result.shiftStart.toString()); // 2026-04-19T08:00:00+08:00[Asia/Singapore]
-console.log(result.logicalDay.toString()); // 2026-04-19
-```
-
-Behavior:
-
-- `before` applies to early arrivals before the upcoming shift start
-- `after` applies to late arrivals after the active shift start
-- only early arrivals within `before` tolerance are reassigned to the upcoming shift
-- late arrivals can still match the tolerance window without changing logical assignment
-- comparisons use exact `Temporal.Instant` semantics, so DST transitions do not break the tolerance logic
-- oversized tolerance windows are rejected if they would overlap adjacent shift starts
-
-### `resolveShiftEnd`
-
-Use this when the business needs to classify what happened after scheduled shift end.
-
-This helper keeps three outcomes distinct:
-
-- late log off
-- forgot to log off
-- time beyond scheduled end, measured from the configured shift-end rule
-
-```js
-import { Temporal } from '@js-temporal/polyfill';
-import { resolveShiftEnd } from 'day-boundary/shifts';
-
-const result = resolveShiftEnd(
-  Temporal.ZonedDateTime.from('2026-04-19T18:30:00+08:00[Asia/Singapore]'),
-  Temporal.ZonedDateTime.from('2026-04-19T17:00:00+08:00[Asia/Singapore]'),
-  {
-    lateLogOffTolerance: {
-      after: Temporal.Duration.from({ minutes: 15 }),
-    },
-    overtime: {
-      startsAfter: Temporal.Duration.from({ minutes: 0 }),
-    },
-  }
-);
-
-console.log(result.completionStatus);       // late-log-off
-console.log(result.matchedLateLogOffTolerance); // false
-console.log(result.overtime.hasOvertime);   // true
-console.log(result.overtime.duration.toString());
-```
-
-Missing log-off inference is also explicit:
-
-```js
-const inferred = resolveShiftEnd(
-  null,
-  Temporal.ZonedDateTime.from('2026-04-19T17:00:00+08:00[Asia/Singapore]'),
-  {
-    missingLogOff: {
-      allowInference: true,
-      autoCloseAfter: Temporal.Duration.from({ minutes: 15 }),
-    },
-  }
-);
-
-console.log(inferred.completionStatus); // forgot-to-log-off
-console.log(inferred.inferredLogOff);   // true
-console.log(inferred.overtime.hasOvertime); // false
-```
-
-Behavior:
-
-- `lateLogOffTolerance.after` classifies small post-end delays
-- `missingLogOff.allowInference` with `autoCloseAfter` allows an inferred end time when no log-off exists
-- `overtime.startsAfter` determines when time beyond scheduled end begins counting from scheduled shift end
-- that extra time is calculated from exact elapsed time using `Temporal.Instant`
-- inferred missing log-off handling does not create extra post-end time by default
-
-The field and option name remain `overtime` for API stability. In this library they represent neutral post-end measurement, not payroll entitlement or legal overtime by themselves.
-
-Use this layer when your app needs shift semantics on top of the boundary engine, especially for staffing, handover logic, and downstream systems that may later apply their own payroll policy.
+The same primitive covers worker schedules, delivery route windows, school
+lesson overruns, and factory process overruns. The library resolves boundary
+windows and neutral end points; labels such as late, absent, overtime, or SLA
+breach are business decisions layered above the neutral result.

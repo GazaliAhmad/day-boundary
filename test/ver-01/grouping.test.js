@@ -7,7 +7,7 @@ import {
   getWindowId,
   groupByWindow,
   isSameWindow,
-} from "../lib/day-boundary-v1.js";
+} from "../../lib/ver-01/day-boundary.js";
 
 function localDate(year, month, day, hour = 0, minute = 0, second = 0) {
   return new Date(year, month - 1, day, hour, minute, second, 0);

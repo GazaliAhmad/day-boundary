@@ -6,6 +6,61 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 Note: the historical `1.0.0` section below documents the internal baseline for the archived v1 API line. It was not published as a package release. The first public package release was `2.0.0`.
 
+## [3.0.0] - 2026-04-24
+
+### Breaking
+
+- Removed the `day-boundary/shifts` subpath export.
+- Kept the archived v2 line in the repository only instead of publishing a `day-boundary/v2` compatibility export in `3.0.0`.
+- Removed `shifts.d.ts`.
+- Removed shift-specific helpers:
+  - `getShiftEndByElapsedDuration(...)`
+  - `getShiftEndByWallClockDuration(...)`
+  - `compareShiftEndings(...)`
+  - `resolveShiftStart(...)`
+  - `resolveShiftEnd(...)`
+- Removed the shift-specific implementation folder and attendance policy toy app so the package surface is centered on boundary-window primitives.
+- Removed the delivery-operations browser example because it duplicated attendance policy behavior with delivery-specific naming rather than demonstrating a distinct primitive.
+
+### Added
+
+- `getWindowEndByElapsedDuration(...)` in the root `day-boundary` export for resolving a boundary-window end by exact elapsed duration.
+- `getWindowEndByWallClockDuration(...)` in the root `day-boundary` export for resolving a boundary-window end by local wall-clock duration.
+- `compareWindowEndings(...)` in the root `day-boundary` export for comparing elapsed and wall-clock end results.
+- `lib/day-boundary.js` as the stable public-facing local entry for the current implementation.
+- `lib/window-durations.js` as the stable public-facing module path for boundary-window duration helpers.
+
+### Changed
+
+- Reframed elapsed-vs-wall-clock behavior as a core boundary-window primitive rather than shift-specific behavior.
+- Renamed the shift duration toy app to the duration toy app and updated it to use the neutral helper names from the main `day-boundary` entry point.
+- Updated package metadata, docs, tests, and examples to remove the shift companion API from the promoted surface.
+- Kept archived `ver-01` and `ver-02` material in the repository while publishing only the current `3.0.0` package surface.
+- Simplified the published documentation so npm users receive unversioned current guides at `guides/usage.md` and `guides/api.md`.
+- Updated active browser examples to use the stable unversioned local entry path instead of exposing internal `ver-03` import paths.
+
+### Migration
+
+Replace shift-specific duration imports:
+
+```js
+import { compareShiftEndings } from 'day-boundary/shifts';
+```
+
+with root boundary-window duration imports:
+
+```js
+import { compareWindowEndings } from 'day-boundary';
+```
+
+Map the old duration helper names to the v3 root helpers:
+
+- `getShiftEndByElapsedDuration(...)` -> `getWindowEndByElapsedDuration(...)`
+- `getShiftEndByWallClockDuration(...)` -> `getWindowEndByWallClockDuration(...)`
+- `compareShiftEndings(...)` -> `compareWindowEndings(...)`
+
+Move shift, attendance, overtime, delivery, SLA, and overrun labels into application policy code layered above the neutral boundary-window results.
+
 ## [2.1.1] - 2026-04-22
 
 ### Changed
@@ -62,7 +117,7 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
 
 - `ROADMAP.md` capturing the product frame, API stabilization plan, packaging work, example strategy, and milestones for the reusable library.
 - `package.json` with an ESM package setup and `npm test`.
-- v2 module in `lib/day-boundary-v2.js` with explicit IANA time-zone-aware boundary resolution.
+- v2 module entry in `lib/ver-02/day-boundary.js` with explicit IANA time-zone-aware boundary resolution.
 - `V2-USAGE.md` covering Node and browser usage, including import-map setup for the Temporal polyfill.
 - Companion shift helper layer in `lib/day-boundary-shifts-v2.js` with DST-aware elapsed-duration and wall-clock shift-ending helpers.
 - Browser examples for dataset-backed boundary resolution, global DST inspection, and shift-signoff comparison in `examples/`.
@@ -75,7 +130,7 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
 - Promoted v2 to the main recommended API for new work.
 - Kept the archived v1 API line available for existing `Date`-based usage.
 - Renamed the package to `day-boundary`.
-- Renamed the archived v1 API file to `lib/day-boundary-v1.js`.
+- Renamed the archived v1 API file to `lib/ver-01/day-boundary.js`.
 - Reorganized browser demos into the `examples/` folder.
 - Set the package root export `day-boundary` to the v2 API and kept compatibility exports for `day-boundary/v1`, `day-boundary/v2`, and `day-boundary/shifts`.
 - Expanded the docs to distinguish the archived v1 API line from the main v2 path, document the polyfill/browser setup, and align install guidance with package dependencies.

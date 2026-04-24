@@ -12,8 +12,8 @@ It assumes the business has already decided what boundary rule applies, such as:
 
 Related guides:
 
-- [V2 Usage](./v2-usage.md) for the main API examples
-- [V2 API](./v2-api.md) for the boundary and window contract
+- [Usage](./usage.md) for the main API examples
+- [API](./api.md) for the boundary and window contract
 - [Business Use Cases](./business-use-cases.md) for scenario framing
 
 ## The core idea

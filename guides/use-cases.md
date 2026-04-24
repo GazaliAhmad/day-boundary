@@ -4,7 +4,7 @@ This document describes where the library is strongest, where it is situational,
 
 Related guides:
 
-- [V2 Usage](./v2-usage.md) for the main implementation path
+- [Usage](./usage.md) for the main implementation path
 - [Business Use Cases](./business-use-cases.md) for a business-oriented explanation of the strongest scenarios
 - [SQL DST-Safe Queries](./sql-dst-safe-queries.md) for the concrete querying pattern
 
@@ -20,7 +20,7 @@ If any one of those is missing, the library may be more abstraction than value.
 
 These are the best fits for the library because they combine non-midnight boundaries with repeated business logic and meaningful downside if the rule is wrong.
 
-### 1. Shift-based operations
+### 1. Boundary-based operations
 
 Examples:
 
@@ -28,6 +28,7 @@ Examples:
 - logistics
 - security
 - maintenance
+- worker schedules
 
 Why the library fits:
 
@@ -39,9 +40,9 @@ What the library provides:
 
 - clean grouping of activity into operational windows
 - removal of scattered "previous day" logic
-- stable reporting aligned to actual shift cycles
+- stable reporting aligned to actual operating cycles
 
-### 2. Healthcare and hospital shifts
+### 2. Healthcare and hospital operations
 
 Examples:
 
@@ -53,19 +54,19 @@ Examples:
 Why the library fits:
 
 - patient care activity often crosses midnight
-- operational ownership is usually defined by shift, not calendar date
+- operational ownership is usually defined by a handover or operating window, not calendar date
 - auditability and continuity matter more than civil-day alignment
 
 Why this is high-stakes:
 
 - handover mistakes are operationally serious
-- audit trails must reflect the intended shift window
+- audit trails must reflect the intended boundary window
 - staffing and accountability rules need consistent grouping
 
 Important DST note:
 
 - on transition days, `8 actual elapsed hours` and `00:00 -> 08:00 local schedule` are not always the same
-- the library's v2 path plus companion shift helpers make that distinction explicit
+- the library's duration helpers make that distinction explicit
 
 ### 3. Transport and ride-hailing payout windows
 
@@ -198,7 +199,7 @@ The best case for the library is not "general time handling."
 
 The best case is:
 
-> a reusable boundary engine for systems where the operational day is not midnight
+> a reusable boundary engine for systems where meaningful windows are defined by business boundaries rather than midnight
 
 That framing is narrower, but stronger:
 
@@ -212,7 +213,7 @@ The library is strongest when it is used as:
 
 - a boundary resolver
 - a windowing engine
-- a consistent source of grouping logic for non-midnight days
+- a consistent source of grouping logic for non-midnight and non-calendar windows
 
 It is not intended to be:
 
@@ -230,4 +231,4 @@ That is a credible place for a small library:
 - broad enough to be reused
 - concrete enough to solve real pain
 
-For implementation details after deciding the library is a fit, continue with [V2 Usage](./v2-usage.md).
+For implementation details after deciding the library is a fit, continue with [Usage](./usage.md).

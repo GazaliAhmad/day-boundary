@@ -1,8 +1,8 @@
-import { runDailyBoundaryTests } from "./daily-boundary.test.js";
-import { runDayBoundaryShiftTests } from "./day-boundary-shifts.test.js";
-import { runDayBoundaryV2Tests } from "./day-boundary-v2.test.js";
-import { runFixedTimeBoundaryTests } from "./fixed-time-boundary.test.js";
-import { runGroupingTests } from "./grouping.test.js";
+import { runDailyBoundaryTests } from "./ver-01/daily-boundary.test.js";
+import { runDayBoundaryDurationTests } from "./ver-03/day-boundary-durations.test.js";
+import { runDayBoundaryV2Tests } from "./ver-03/day-boundary.test.js";
+import { runFixedTimeBoundaryTests } from "./ver-01/fixed-time-boundary.test.js";
+import { runGroupingTests } from "./ver-01/grouping.test.js";
 
 const tests = [];
 
@@ -14,7 +14,7 @@ runFixedTimeBoundaryTests(run);
 runDailyBoundaryTests(run);
 runGroupingTests(run);
 runDayBoundaryV2Tests(run);
-runDayBoundaryShiftTests(run);
+runDayBoundaryDurationTests(run);
 
 let passed = 0;
 

@@ -1,12 +1,14 @@
-# V2 API
+# Current API
 
-This document defines the v2 API for `day-boundary`.
+This document defines the current `3.x` API for `day-boundary`.
 
-The goal of v2 is to make the library truly global by moving from `Date`-based local assumptions to `Temporal`-based, time-zone-aware window resolution.
+The goal is to make boundary-defined windows explicit: a boundary event opens or
+closes a meaningful span of time, and the library resolves those windows with
+Temporal and explicit IANA time zones.
 
 Related guides:
 
-- [V2 Usage](./v2-usage.md) for practical usage examples
+- [Usage](./usage.md) for practical usage examples
 - [Functions Reference](./functions-reference.md) for the symbol inventory
 - [Use Cases](./use-cases.md) for positioning and fit
 
@@ -17,7 +19,7 @@ Related guides:
 - Represent windows as exact time in a named zone.
 - Handle DST and non-24-hour days correctly.
 - Keep calendar labeling out of the core library.
-- Preserve the current library's main mental model: resolve a boundary-defined day as a window.
+- Preserve the main mental model: boundary events define windows.
 - Keep the API idiomatic to Temporal instead of recreating parallel date/time concepts.
 
 ## Non-goals
@@ -31,11 +33,14 @@ Related guides:
 
 ### Boundary window
 
-A boundary window is the interval:
+A boundary event is a resolved point in time with domain meaning, such as a
+cutoff, changeover, opening, closing, start, or end.
+
+A boundary window is the interval between two boundary events:
 
 `[boundary_n, boundary_n+1)`
 
-In v2, boundaries are resolved in an explicit IANA time zone and returned as `Temporal.ZonedDateTime`.
+Boundaries are resolved in an explicit IANA time zone and returned as `Temporal.ZonedDateTime`.
 
 Shape:
 
@@ -55,17 +60,28 @@ Notes:
 - Core outputs should use the ISO 8601 calendar unless a future version intentionally adds calendar-aware core behavior.
 - `label` is a library-level descriptive label for the window strategy, not a calendar label.
 - `metadata` is strategy-defined structured context.
-- This is a deliberate API choice: v2 returns `Temporal.ZonedDateTime` for developer readability and zone-aware debugging, while internal comparisons should use `toInstant()`.
+- This is a deliberate API choice: the library returns `Temporal.ZonedDateTime` for developer readability and zone-aware debugging, while internal comparisons should use `toInstant()`.
 
 ### Time model
 
-v2 distinguishes between:
+The API distinguishes between:
 
 - exact time: `Temporal.Instant`
 - wall-clock local date/time: `Temporal.PlainDateTime`
 - zone-aware exact/local value: `Temporal.ZonedDateTime`
 
 The library does its core comparison, grouping, and progress calculations using exact time semantics.
+
+### Boundary timelines
+
+A strategy is a boundary resolver: given an exact instant, it returns the
+boundary window that contains that instant. The current built-in strategies
+resolve daily boundary timelines, but the core shape is broader than calendar
+days.
+
+Duration helpers are a convenience for deriving an end boundary from a start
+boundary. They are not the whole primitive; windows can also be closed by the
+next boundary event from a rule, dataset, or application resolver.
 
 ## Package entry
 
@@ -299,7 +315,7 @@ Example:
 
 ## DST and time zone behavior
 
-v2 explicitly supports:
+The current API explicitly supports:
 
 - IANA time zones such as `Asia/Singapore`, `Europe/London`, `America/New_York`
 - DST transitions
@@ -316,20 +332,19 @@ Rules:
 - Exact-time calculations should compare instants, not wall-clock fields.
 - Public APIs should avoid offset math and rely on Temporal's zone resolution behavior.
 
-## Shift semantics
+## Boundary duration semantics
 
-For shift-based domains such as hospitals, nursing care, transport, and factory work, v2 must keep two distinct meanings separate:
+For domains such as worker schedules, schools, delivery operations, and factory
+processes, the API must keep two distinct meanings separate:
 
 - `elapsed duration`
 - `wall-clock schedule`
-- `start tolerance windows`
-- `end-of-shift classification`
 
 These diverge on DST transition days.
 
 Example in `Europe/London` when clocks go back on Sunday, October 25, 2026:
 
-- a shift that starts at `00:00 BST`
+- a boundary event at `00:00 BST`
 - ends at `07:00 GMT` if the rule is `8 actual elapsed hours`
 - ends at `08:00 GMT` if the rule is `00:00 -> 08:00 local wall-clock time`
 
@@ -340,27 +355,25 @@ Implication for library consumers:
 
 This distinction should remain explicit in examples, docs, and any future higher-level scheduling helpers built on top of the boundary library.
 
-### Companion shift helpers
+### Boundary duration helpers
 
-The companion `day-boundary/shifts` entry point now includes:
+The root `day-boundary` entry point includes:
 
-- `getShiftEndByElapsedDuration(start, duration)`
-- `getShiftEndByWallClockDuration(start, duration)`
-- `compareShiftEndings(start, duration)`
-- `resolveShiftStart(eventTime, strategy, options)`
-- `resolveShiftEnd(logOffTime, scheduledShiftEnd, options)`
+- `getWindowEndByElapsedDuration(start, duration)`
+- `getWindowEndByWallClockDuration(start, duration)`
+- `compareWindowEndings(start, duration)`
 
 Rules:
 
-- shift helper inputs should use Temporal objects only in the typed API
-- start tolerance values use `Temporal.Duration` and compare exact instants around the boundary start
-- end-of-shift rules use `Temporal.Duration` and compare exact instants from scheduled shift end
-- the `overtime` field represents time beyond scheduled end, starting from scheduled shift end or from `scheduledShiftEnd + overtime.startsAfter` when a threshold is configured
-- inferred missing log-off handling should stay separate from confirmed post-end time
+- duration helper inputs should use Temporal objects only in the typed API
+- elapsed-duration rules add duration to the exact start instant
+- wall-clock-duration rules add duration to the local `PlainDateTime`, then resolve it back into the configured time zone
+- `compareWindowEndings` reports whether both interpretations resolve to the same instant and the difference in minutes
+- business labels such as late, absent, overtime, overrun, or SLA breach are outside the core library
 
 ## Error behavior
 
-v2 throws when:
+The API throws when:
 
 - a strategy is invalid
 - a required time zone is missing or invalid
@@ -391,7 +404,7 @@ v1:
 - assumes local host behavior
 - treats daily transitions with implicit local semantics
 
-v2:
+current API:
 
 - uses `Temporal`
 - requires explicit IANA time zones
@@ -408,7 +421,7 @@ v2:
 
 ## Design decisions
 
-The following design decisions define the current v2 line:
+The following design decisions define the current line:
 
 1. `BoundaryWindow.start` and `BoundaryWindow.end` use `Temporal.ZonedDateTime`.
 2. Exact comparisons and duration math use `toInstant()` semantics internally.
@@ -423,4 +436,4 @@ The current implementation is:
 - input helpers accept Temporal objects only
 - zone and DST handling are explicit
 - calendar labeling remains outside core
-- core APIs prefer Temporal objects in the typed public surface, with strict declaration files for `day-boundary` and `day-boundary/shifts`
+- core APIs prefer Temporal objects in the typed public surface, with a strict declaration file for `day-boundary`
