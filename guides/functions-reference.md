@@ -35,7 +35,7 @@ Related guides:
 
 ## Main library — internal source helpers and functions
 
-These functions are exported through `lib/day-boundary.js` and implemented in `lib/ver-03/day-boundary.js`.
+These functions are exported through `lib/day-boundary.js` and implemented in `lib/day-boundary.js`.
 
 Some are public exports, while others are internal helpers used by the exported API.
 
@@ -77,7 +77,7 @@ Some are public exports, while others are internal helpers used by the exported 
 
 ## Main library — classes and methods
 
-These classes are exported through `lib/day-boundary.js` and implemented in `lib/ver-03/day-boundary.js`.
+These classes are exported through `lib/day-boundary.js` and implemented in `lib/day-boundary.js`.
 
 ### `BoundaryStrategy`
 
@@ -103,7 +103,7 @@ These classes are exported through `lib/day-boundary.js` and implemented in `lib
 
 ## Boundary duration helpers
 
-These functions are exported from `lib/day-boundary.js` and implemented in `lib/ver-03/window-durations.js`.
+These functions are exported from `lib/day-boundary.js` and implemented in `lib/window-durations.js`.
 
 `getWindowEndByElapsedDuration(start, durationLike)`
 

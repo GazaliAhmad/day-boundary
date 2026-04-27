@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 Note: the historical `1.0.0` section below documents the internal baseline for the archived v1 API line. It was not published as a package release. The first public package release was `2.0.0`.
 
+## [3.0.2] - 2026-04-27
+
+### Changed
+
+- Simplified the published npm package so installed consumers now see a single canonical runtime surface under `lib/` with no duplicated `ver-03` runtime files.
+- Stopped publishing the `guides/` documentation folder in the npm tarball and updated README documentation links to point at the GitHub-hosted guides instead.
+- Inlined the current implementation into `lib/day-boundary.js` and `lib/window-durations.js` so the published package no longer exposes internal version-folder indirection.
+
 ## [3.0.1] - 2026-04-27
 
 ### Added

@@ -9,4 +9,5 @@ node_modules/
 coverage/
 dist/
 .npm-cache/
+.npm-pack-cache/
 .tmp-npm-cache/

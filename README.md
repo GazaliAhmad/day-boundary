@@ -2,7 +2,7 @@
 
 Assign timestamps to operational windows when midnight breaks your logic.
 
-This README describes the current `day-boundary` `3.0.0` package line.
+This README describes the current `day-boundary` `3.0.2` package line.
 The root package export maps to the stable current API entry.
 
 Core primitive:
@@ -28,9 +28,9 @@ If your operation changes over at `09:00` in London, this library helps you turn
 
 ---
 
-## v3.0.0 note
+## v3.0.x note
 
-`day-boundary@3.0.0` removes the former `day-boundary/shifts` companion API. Boundary-window
+The v3 line removes the former `day-boundary/shifts` companion API. Boundary-window
 duration behavior now lives in the root API with neutral names:
 
 * `getWindowEndByElapsedDuration`
@@ -243,18 +243,18 @@ Window IDs are stable across DST transitions and safe for grouping and persisten
 
 See:
 
-* [Documentation index](./guides/README.md) for the full documentation map
-* [Usage guide](./guides/usage.md) for examples
-* [API guide](./guides/api.md) for the full specification
-* [Functions reference](./guides/functions-reference.md) for the compact reference sheet
-* [SQL DST-safe queries](./guides/sql-dst-safe-queries.md) for the implementation query pattern
-* [Business use cases](./guides/business-use-cases.md) for business framing
-* [Use cases](./guides/use-cases.md) for positioning and fit
+* [Documentation index](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/README.md) for the full documentation map
+* [Usage guide](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/usage.md) for examples
+* [API guide](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/api.md) for the full specification
+* [Functions reference](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/functions-reference.md) for the compact reference sheet
+* [SQL DST-safe queries](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/sql-dst-safe-queries.md) for the implementation query pattern
+* [Business use cases](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/business-use-cases.md) for business framing
+* [Use cases](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/use-cases.md) for positioning and fit
 
 Archive note:
 
-* `day-boundary` → current `3.0.0` root API
-* `ver-01` and `ver-02` → repository archives only, not part of the published npm package
+* `day-boundary` → current `3.0.2` root API
+* `ver-01`, `ver-02`, and `ver-03` → repository history folders only, not part of the published npm package
 * if you need the old v2 package behavior, use `day-boundary@2.x`
 
 ---
@@ -311,24 +311,24 @@ Browser examples are available in this repository and are not included in the pu
 
 Available examples:
 
-* [API snippets](./examples/day-boundary-api-snippets/) → focused demos for smaller public helpers
-* [Toy app](./examples/day-boundary-toy-app/) → basic boundary behavior
-* [DST toy app](./examples/day-boundary-dst-toy-app/) → DST transitions and day length
-* [Duration toy app](./examples/day-boundary-duration-toy-app/) → elapsed vs wall-clock differences
-* [Hijri POC](./examples/day-boundary-hijri-poc/) → real-world shifting boundaries using calendar and prayer-time data
+* [API snippets](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-api-snippets) → focused demos for smaller public helpers
+* [Toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-toy-app) → basic boundary behavior
+* [DST toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-dst-toy-app) → DST transitions and day length
+* [Duration toy app](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-duration-toy-app) → elapsed vs wall-clock differences
+* [Hijri POC](https://github.com/GazaliAhmad/day-boundary/tree/main/examples/day-boundary-hijri-poc) → real-world shifting boundaries using calendar and prayer-time data
 
-To run them locally from the repository root:
+To run them locally from a clone of the repository root:
 
 ```bash
 python -m http.server 8000
 ```
 
-More guides:
+More resources:
 
-* [Examples README](./examples/README.md) for local example URLs
-* [Documentation index](./guides/README.md) for the full documentation map
-* [SQL DST-safe queries](./guides/sql-dst-safe-queries.md) for implementation guidance
-* [Business use cases](./guides/business-use-cases.md) for business use-case framing
+* [Examples README](https://github.com/GazaliAhmad/day-boundary/blob/main/examples/README.md) for local example URLs
+* [Documentation index](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/README.md) for the full documentation map
+* [SQL DST-safe queries](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/sql-dst-safe-queries.md) for implementation guidance
+* [Business use cases](https://github.com/GazaliAhmad/day-boundary/blob/main/guides/business-use-cases.md) for business use-case framing
 
 ---
 
