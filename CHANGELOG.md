@@ -6,6 +6,17 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 Note: the historical `1.0.0` section below documents the internal baseline for the archived v1 API line. It was not published as a package release. The first public package release was `2.0.0`.
 
+## [3.0.1] - 2026-04-27
+
+### Added
+
+- Added an `examples/day-boundary-api-snippets/` browser example page covering `getWindowForZonedDateTime(...)` and `isSameWindow(...)` with focused, smaller demos.
+
+### Changed
+
+- Updated `examples/README.md` to list the API snippets example alongside the existing browser demos.
+- Updated the top-level `README.md` examples list so it stays in sync with the current repository example set.
+
 ## [3.0.0] - 2026-04-24
 
 ### Breaking

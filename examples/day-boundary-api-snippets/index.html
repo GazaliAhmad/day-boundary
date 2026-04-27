@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day Boundary API Snippets</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
+          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <p class="eyebrow">Examples</p>
+        <h1>API Snippets</h1>
+        <p class="lede">
+          Small, focused demos for public helpers that do not need a full toy app.
+          This page covers resolving a window from an existing
+          <span class="mono">Temporal.ZonedDateTime</span> and checking whether
+          two exact instants land in the same operational window.
+        </p>
+      </header>
+
+      <section class="card stack">
+        <h2><span class="mono">getWindowForZonedDateTime</span></h2>
+        <p class="muted">
+          Use this when your application already has a zoned timestamp and you
+          want the library to resolve the surrounding operational window.
+        </p>
+        <div class="grid">
+          <div>
+            <div class="label">Strategy</div>
+            <div class="mono" id="zdt-strategy"></div>
+          </div>
+          <div>
+            <div class="label">Input zoned timestamp</div>
+            <div class="mono" id="zdt-input"></div>
+          </div>
+          <div>
+            <div class="label">Resolved window start</div>
+            <div class="mono" id="zdt-window-start"></div>
+          </div>
+          <div>
+            <div class="label">Resolved window end</div>
+            <div class="mono" id="zdt-window-end"></div>
+          </div>
+          <div>
+            <div class="label">Window ID</div>
+            <div class="mono" id="zdt-window-id"></div>
+          </div>
+          <div>
+            <div class="label">What to notice</div>
+            <div id="zdt-note"></div>
+          </div>
+        </div>
+        <pre class="snippet"><code>const zdt = Temporal.ZonedDateTime.from(
+  '2026-10-24T12:00:00+01:00[Europe/London]'
+);
+
+const window = getWindowForZonedDateTime(zdt, strategy);</code></pre>
+      </section>
+
+      <section class="card stack">
+        <h2><span class="mono">isSameWindow</span></h2>
+        <p class="muted">
+          Use this when you need to compare two exact instants and ask whether
+          they belong to the same boundary-defined operational window.
+        </p>
+        <div class="controls">
+          <button id="same-window-button" type="button">Scenario: same window</button>
+          <button id="different-window-button" type="button">Scenario: different windows</button>
+        </div>
+        <div class="status" id="same-window-status"></div>
+        <div class="grid">
+          <div>
+            <div class="label">Strategy</div>
+            <div class="mono" id="same-window-strategy"></div>
+          </div>
+          <div>
+            <div class="label">Scenario</div>
+            <div id="same-window-scenario"></div>
+          </div>
+          <div>
+            <div class="label">Instant A</div>
+            <div class="mono" id="same-window-a"></div>
+          </div>
+          <div>
+            <div class="label">Instant B</div>
+            <div class="mono" id="same-window-b"></div>
+          </div>
+          <div>
+            <div class="label">A resolves to</div>
+            <div class="mono" id="same-window-a-window"></div>
+          </div>
+          <div>
+            <div class="label">B resolves to</div>
+            <div class="mono" id="same-window-b-window"></div>
+          </div>
+          <div>
+            <div class="label">Result</div>
+            <div class="mono" id="same-window-result"></div>
+          </div>
+          <div>
+            <div class="label">What to notice</div>
+            <div id="same-window-note"></div>
+          </div>
+        </div>
+        <pre class="snippet"><code>const same = isSameWindow(instantA, instantB, strategy);</code></pre>
+      </section>
+    </main>
+
+    <script type="module">
+      import { Temporal } from '@js-temporal/polyfill';
+      import {
+        FixedTimeBoundaryStrategy,
+        getWindowForZonedDateTime,
+        getWindowForInstant,
+        getWindowId,
+        isSameWindow,
+      } from '../../lib/day-boundary.js';
+
+      const TIME_ZONE = 'Europe/London';
+      const strategy = new FixedTimeBoundaryStrategy({
+        timeZone: TIME_ZONE,
+        boundaryTime: '09:00',
+        label: 'operational-day',
+      });
+
+      const zdtInput = Temporal.ZonedDateTime.from(
+        '2026-10-24T12:00:00+01:00[Europe/London]'
+      );
+
+      const sameWindowScenarios = {
+        same: {
+          label: 'Two instants after the same 09:00 boundary',
+          instantA: Temporal.Instant.from('2026-10-24T10:30:00Z'),
+          instantB: Temporal.Instant.from('2026-10-24T18:45:00Z'),
+          note: 'Both instants resolve to the same operational window, so the helper returns true.',
+        },
+        different: {
+          label: 'Two instants on opposite sides of the next boundary',
+          instantA: Temporal.Instant.from('2026-10-25T07:30:00Z'),
+          instantB: Temporal.Instant.from('2026-10-25T09:30:00Z'),
+          note: 'The second instant is already in the next operational window, so the helper returns false.',
+        },
+      };
+
+      const zdtStrategyEl = document.getElementById('zdt-strategy');
+      const zdtInputEl = document.getElementById('zdt-input');
+      const zdtWindowStartEl = document.getElementById('zdt-window-start');
+      const zdtWindowEndEl = document.getElementById('zdt-window-end');
+      const zdtWindowIdEl = document.getElementById('zdt-window-id');
+      const zdtNoteEl = document.getElementById('zdt-note');
+
+      const sameWindowStrategyEl = document.getElementById('same-window-strategy');
+      const sameWindowScenarioEl = document.getElementById('same-window-scenario');
+      const sameWindowAEl = document.getElementById('same-window-a');
+      const sameWindowBEl = document.getElementById('same-window-b');
+      const sameWindowAWindowEl = document.getElementById('same-window-a-window');
+      const sameWindowBWindowEl = document.getElementById('same-window-b-window');
+      const sameWindowResultEl = document.getElementById('same-window-result');
+      const sameWindowNoteEl = document.getElementById('same-window-note');
+      const sameWindowStatusEl = document.getElementById('same-window-status');
+      const sameWindowButtonEl = document.getElementById('same-window-button');
+      const differentWindowButtonEl = document.getElementById('different-window-button');
+
+      function renderZonedDateTimeExample() {
+        const window = getWindowForZonedDateTime(zdtInput, strategy);
+
+        zdtStrategyEl.textContent = `${TIME_ZONE} fixed boundary at 09:00`;
+        zdtInputEl.textContent = zdtInput.toString();
+        zdtWindowStartEl.textContent = window.start.toString();
+        zdtWindowEndEl.textContent = window.end.toString();
+        zdtWindowIdEl.textContent = getWindowId(window);
+        zdtNoteEl.textContent =
+          'The helper preserves the exact instant from the existing zoned value, then resolves the containing window.';
+      }
+
+      function renderSameWindowScenario(key) {
+        const scenario = sameWindowScenarios[key];
+        const windowA = getWindowForInstant(scenario.instantA, strategy);
+        const windowB = getWindowForInstant(scenario.instantB, strategy);
+        const same = isSameWindow(scenario.instantA, scenario.instantB, strategy);
+
+        sameWindowStrategyEl.textContent = `${TIME_ZONE} fixed boundary at 09:00`;
+        sameWindowScenarioEl.textContent = scenario.label;
+        sameWindowAEl.textContent = scenario.instantA.toString();
+        sameWindowBEl.textContent = scenario.instantB.toString();
+        sameWindowAWindowEl.textContent = `${windowA.start.toString()} -> ${windowA.end.toString()}`;
+        sameWindowBWindowEl.textContent = `${windowB.start.toString()} -> ${windowB.end.toString()}`;
+        sameWindowResultEl.textContent = same ? 'true' : 'false';
+        sameWindowNoteEl.textContent = scenario.note;
+        sameWindowStatusEl.textContent = same
+          ? 'Both instants land in the same operational window.'
+          : 'The instants resolve to different operational windows.';
+        sameWindowStatusEl.dataset.kind = same ? 'true' : 'false';
+      }
+
+      sameWindowButtonEl.addEventListener('click', () => renderSameWindowScenario('same'));
+      differentWindowButtonEl.addEventListener('click', () => renderSameWindowScenario('different'));
+
+      renderZonedDateTimeExample();
+      renderSameWindowScenario('same');
+    </script>
+  </body>
+</html>

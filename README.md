@@ -311,6 +311,7 @@ Browser examples are available in this repository and are not included in the pu
 
 Available examples:
 
+* [API snippets](./examples/day-boundary-api-snippets/) → focused demos for smaller public helpers
 * [Toy app](./examples/day-boundary-toy-app/) → basic boundary behavior
 * [DST toy app](./examples/day-boundary-dst-toy-app/) → DST transitions and day length
 * [Duration toy app](./examples/day-boundary-duration-toy-app/) → elapsed vs wall-clock differences
