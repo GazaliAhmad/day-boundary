@@ -11,3 +11,4 @@ dist/
 .npm-cache/
 .npm-pack-cache/
 .tmp-npm-cache/
+.tmp-npm-pack-cache*/

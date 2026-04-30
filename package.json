@@ -16,9 +16,7 @@
     "lib/day-boundary.js",
     "lib/window-durations.js",
     "README.md",
-    "LICENSE",
-    "IP-NOTICE.md",
-    "CHANGELOG.md"
+    "LICENSE"
   ],
   "scripts": {
     "test": "node test/run-tests.js",
