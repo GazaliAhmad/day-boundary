@@ -101,6 +101,10 @@ Temporal-only.
 
 ## Try the demo locally
 
+Published examples site:
+
+`https://dayboundary.gazali.one/`
+
 If you want to run this repository locally:
 
 ```bash
@@ -113,7 +117,10 @@ Open this first:
 
 `http://localhost:8000/examples/day-boundary-operational-day-demo/`
 
-That is the best first browser example for understanding the library.
+That is the best first browser example for understanding the library. The full
+examples tour lives at:
+
+`http://localhost:8000/examples/`
 
 ## Reference CLI
 

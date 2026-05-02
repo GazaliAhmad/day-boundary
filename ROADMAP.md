@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap reflects the current state of `day-boundary` in the `3.1.1` line.
+This roadmap reflects the current state of `day-boundary` in the `3.1.3` line.
 
 The library is now positioned as:
 
@@ -21,7 +21,7 @@ The repo currently includes:
 - a test suite covering boundary windows, DST-sensitive behavior, duration semantics, and cross-zone calendar divergence
 - explicit runtime migration guards for common legacy input shapes so older v1-style usage fails with targeted upgrade guidance
 - an explicit Node `18+` and ESM-only package contract
-- browser examples in [examples/](./examples/)
+- browser examples in [examples/](./examples/) and a published examples site at `https://dayboundary.gazali.one/`
 - npm packaging metadata for the current `day-boundary` `3.x` line
 - focused guide coverage for:
   - overnight and negative-offset operational days
@@ -32,7 +32,7 @@ The repo currently includes:
 The published package surface is currently:
 
 - `day-boundary` -> main API
-- `ver-01` and `ver-02` -> repository archives only, not published npm exports
+- `ver-01`, `ver-02`, and `ver-03` -> repository archives only, not published npm exports
 - users who need the old v2 package line should stay on `day-boundary@2.x`
 
 ## Product Frame
@@ -84,6 +84,7 @@ The current example suite is:
 - [examples/day-boundary-hijri-poc/index.html](./examples/day-boundary-hijri-poc/index.html)
 - [examples/day-boundary-dst-critical-cases/index.html](./examples/day-boundary-dst-critical-cases/index.html)
 - [examples/day-boundary-duration-scenarios/index.html](./examples/day-boundary-duration-scenarios/index.html)
+- [examples/day-boundary-api-snippets/index.html](./examples/day-boundary-api-snippets/index.html)
 
 These examples currently validate:
 

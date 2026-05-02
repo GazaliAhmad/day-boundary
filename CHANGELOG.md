@@ -6,6 +6,27 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 
 Note: the historical `1.0.0` section below documents the internal baseline for the archived v1 API line. It was not published as a package release. The first public package release was `2.0.0`.
 
+## [3.1.3] - 2026-05-02
+
+### Changed
+
+- Corrected the published examples-site metadata and canonical URLs to use the live deployed domain `https://dayboundary.gazali.one/`.
+- Updated the README demo section to point at both the published examples site and the local examples hub.
+- Refreshed the roadmap so it reflects the live published examples site, the archived `ver-03` repository-only line, and the full current example suite including the API snippets page.
+
+## [3.1.2] - 2026-05-02
+
+### Added
+
+- Added a self-contained publishable examples-site asset set under `examples/`, including vendored browser dependencies in `examples/vendor/`, local runtime copies in `examples/lib/`, dataset copies in `examples/data/`, and an `examples/favicon.svg` site icon.
+
+### Changed
+
+- Reworked the `examples/` site so it can be published directly as a static website root, replacing repo-relative guide/home links with internal example navigation and rebasing browser imports and data fetches to stay inside the published `examples/` tree.
+- Added publish-facing page metadata across the examples site, including canonical URLs, descriptions, Open Graph tags, Twitter summary tags, theme colors, and favicon references.
+- Fixed early text wrapping issues in the main landing page, API guide, and example pages so long hero copy wraps at the content edge instead of overflowing or breaking prematurely.
+- Fixed the Hijri Maghrib example so its CSV-backed browser demo loads from the self-contained `examples/data/` directory and reports the correct local asset path when those files are missing.
+
 ## [3.1.1] - 2026-05-01
 
 ### Added
@@ -21,7 +42,6 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
   - repeated fall-back local timestamps resolved into different windows
   - the same instant resolving to different operational dates across `Pacific/Kiritimati` and `Pacific/Honolulu`
 - Added a dedicated DST browser example page at `examples/day-boundary-dst-critical-cases/` covering spring-forward gaps, fall-back ambiguity, and elapsed-versus-wall-clock duration drift.
-- Added a self-contained publishable examples-site asset set under `examples/`, including vendored browser dependencies in `examples/vendor/`, local runtime copies in `examples/lib/`, dataset copies in `examples/data/`, and an `examples/favicon.svg` site icon.
 
 ### Changed
 
@@ -37,10 +57,6 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
   - `examples/day-boundary-dst-toy-app/` -> `examples/day-boundary-dst-critical-cases/`
   - `examples/day-boundary-duration-toy-app/` -> `examples/day-boundary-duration-scenarios/`
 - Updated `examples/README.md`, `guides/README.md`, `ROADMAP.md`, and in-page example navigation to match the renamed example set and the new documentation flow.
-- Reworked the `examples/` site so it can be published directly as a static website root, replacing repo-relative guide/home links with internal example navigation and rebasing browser imports and data fetches to stay inside the published `examples/` tree.
-- Added publish-facing page metadata across the examples site, including canonical URLs for `https://day-boundary.gazali.one/`, descriptions, Open Graph tags, Twitter summary tags, theme colors, and favicon references.
-- Fixed early text wrapping issues in the main landing page, API guide, and example pages so long hero copy wraps at the content edge instead of overflowing or breaking prematurely.
-- Fixed the Hijri Maghrib example so its CSV-backed browser demo loads from the self-contained `examples/data/` directory and reports the correct local asset path when those files are missing.
 
 ## [3.1.0] - 2026-05-01
 
