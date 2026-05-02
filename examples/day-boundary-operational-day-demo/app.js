@@ -7,7 +7,7 @@ import {
   getWindowForInstant,
   getWindowId,
   groupByWindow,
-} from "../../lib/day-boundary.js";
+} from "../lib/day-boundary.js";
 
 const strategy = new FixedTimeBoundaryStrategy({
   timeZone: "Europe/London",
@@ -53,8 +53,10 @@ const dstComparison = compareWindowEndings(dstStart, dstDuration);
 const flowSteps = [
   "Pick a boundary strategy that matches the operational day instead of assuming midnight.",
   "Resolve exact timestamps with getWindowForInstant(...) to get one stable [start, end) window.",
+  "If a report needs a bucket date or Logical_Date, derive it from window.start in the strategy time zone.",
   "Reuse the same strategy in groupByWindow(...) so reports and exports match the exact same definition.",
   "Choose elapsed or wall-clock duration semantics explicitly when DST can change the exact end instant.",
+  "Handle skipped times, repeated times, and cross-zone date differences as explicit policy cases, not ad hoc fixes.",
 ];
 
 const resolveCode = `import { Temporal } from "@js-temporal/polyfill";
@@ -71,7 +73,8 @@ const strategy = new FixedTimeBoundaryStrategy({
 
 const instant = Temporal.Instant.from("2026-10-25T05:45:00Z");
 const window = getWindowForInstant(instant, strategy);
-const windowId = getWindowId(window);`;
+const windowId = getWindowId(window);
+const logicalDate = window.start.toPlainDate().toString();`;
 
 const groupCode = `const grouped = groupByWindow(
   events,
@@ -101,6 +104,7 @@ function renderResolvePanel() {
   $("resolve-input").textContent = resolveInstant.toString();
   $("resolve-start").textContent = resolvedWindow.start.toString();
   $("resolve-end").textContent = resolvedWindow.end.toString();
+  $("resolve-logical-date").textContent = resolvedWindow.start.toPlainDate().toString();
   $("resolve-id").textContent = getWindowId(resolvedWindow);
   $("resolve-metadata").textContent = JSON.stringify(resolvedWindow.metadata);
   $("resolve-code").textContent = resolveCode;
@@ -123,6 +127,7 @@ function renderGroupingPanel() {
       return `
         <tr>
           <td class="mono">${window.start.toString()}<br>to<br>${window.end.toString()}</td>
+          <td class="mono">${window.start.toPlainDate().toString()}</td>
           <td>${eventsMarkup}</td>
         </tr>`;
     })

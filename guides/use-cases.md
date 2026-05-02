@@ -35,12 +35,14 @@ Why the library fits:
 - a day may begin at `07:00`, `19:00`, or another operational cutoff
 - overnight work often belongs to the previous operational day, not the calendar day
 - reports, dashboards, and downstream analytics need a consistent boundary model
+- getting this wrong creates constant payroll and reconciliation drift, not a one-off bug
 
 What the library provides:
 
 - clean grouping of activity into operational windows
 - removal of scattered "previous day" logic
 - stable reporting aligned to actual operating cycles
+- a reusable primitive with immediate ROI in night-shift and cross-midnight operations
 
 ### 2. Healthcare and hospital operations
 

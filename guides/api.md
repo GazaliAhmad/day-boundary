@@ -138,6 +138,15 @@ Behavior:
 - Boundary time is interpreted as local wall-clock time in the configured zone.
 - DST ambiguity must be resolved using the configured `disambiguation` option.
 - The duration between one boundary and the next is not assumed to be 24 hours.
+- If the boundary lands on a skipped spring-forward local time, resolution follows the configured `disambiguation` policy instead of assuming the wall-clock time exists.
+
+Example:
+
+- `timeZone: 'America/New_York'`
+- `boundaryTime: '02:30'`
+- on Sunday, March 8, 2026, local `02:30` does not exist
+- with `disambiguation: 'compatible'`, Temporal resolves that boundary to `03:30 EDT`
+- with `disambiguation: 'reject'`, the library throws instead of silently choosing a boundary
 
 ### `DailyBoundaryStrategy`
 
@@ -245,6 +254,17 @@ Behavior:
 - Defaults `timeZone` to `strategy.timeZone`.
 - Uses `disambiguation` when the local wall-clock time is repeated or skipped due to DST or other offset changes.
 
+Fall-back example:
+
+- `timeZone: 'America/New_York'`
+- local input `2026-11-01T01:30`
+- that wall-clock time happens twice on the DST fall-back night
+- `disambiguation: 'earlier'` resolves the first `01:30`
+- `disambiguation: 'later'` resolves the second `01:30`
+
+This matters because the two local timestamps can belong to different exact
+instants and, depending on the boundary rule, different resolved windows.
+
 ## Utility helpers
 
 ### `getWindowProgress(instant, window)`
@@ -332,6 +352,18 @@ Rules:
 - Exact-time calculations should compare instants, not wall-clock fields.
 - Public APIs should avoid offset math and rely on Temporal's zone resolution behavior.
 
+Cross-zone implication:
+
+- The same exact instant can belong to different local calendar dates in different time zones.
+- This is especially visible across the International Date Line.
+- Boundary windows and downstream labels must be resolved in the target business zone, not inferred from UTC alone.
+
+Example:
+
+- exact instant: `2026-05-01T10:30:00Z`
+- with `timeZone: 'Pacific/Kiritimati'` and boundary `06:00`, the resolved bucket date is `2026-05-01`
+- with `timeZone: 'Pacific/Honolulu'` and boundary `06:00`, the resolved bucket date is `2026-04-30`
+
 ## Boundary duration semantics
 
 For domains such as worker schedules, schools, delivery operations, and factory
@@ -393,6 +425,18 @@ Examples of external label sources:
 - custom user-defined day names
 
 The library resolves windows. Applications or companion modules map those windows to labels.
+
+For overnight windows, a common downstream rule is to derive the bucket date
+from the local date of `window.start`.
+
+Example:
+
+- boundary at `22:00`
+- resolved window `2026-05-01T22:00 -> 2026-05-02T22:00`
+- default reporting label or `Logical_Date`: `2026-05-01`
+
+This keeps window identity anchored to the opening boundary while leaving room
+for applications to apply a different display label if their domain requires it.
 
 ## Migration guidance from v1
 

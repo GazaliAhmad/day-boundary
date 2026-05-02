@@ -80,6 +80,28 @@ This affects:
 - payroll accuracy
 - compliance
 - staffing calculations
+- daily reconciliation between operations, finance, and payroll
+
+### Night shift reality
+
+In logistics, healthcare, manufacturing, and hospitality, the workday often
+does not match the calendar day.
+
+Common pattern:
+
+- boundary at `22:00`
+- activity continues past midnight
+- the overnight work still belongs to the window that opened at `22:00`
+
+If this rule is modeled incorrectly:
+
+- payroll is wrong every day, not just on rare exceptions
+- teams introduce manual "hour 26" or "previous day" adjustments
+- exports, dashboards, and payroll runs stop agreeing with each other
+- reconciliation becomes a permanent operational tax
+
+This is one of the highest-ROI uses for the library because fixing the boundary
+rule once removes repeated manual correction work across the whole system.
 
 ### Example
 
@@ -103,6 +125,7 @@ The library ensures:
 - correct handling of repeated or skipped times
 - accurate distinction between wall-clock schedule and elapsed duration
 - a neutral primitive that can also represent delivery waves, lesson blocks, and factory process windows
+- one reusable definition of the operational workday for grouping, payroll, exports, and audit trails
 
 ## 3. Operational cutoffs
 
@@ -143,6 +166,44 @@ Define the cutoff as a boundary:
 `(timeZone + boundary rule) -> [start, end)`
 
 The library resolves the correct window for each operational period.
+
+## 4. Cross-region reporting and the International Date Line
+
+### Problem
+
+Global systems often process one exact event stream for multiple business
+regions.
+
+This breaks when teams assume:
+
+- the UTC calendar date is the business date
+- one local date can be reused across all regions
+- a fixed numeric offset is enough to derive reporting windows
+
+Near the International Date Line, the same exact instant can belong to
+different local calendar dates in different regions.
+
+### Example
+
+At exact instant `2026-05-01T10:30:00Z`:
+
+- `Pacific/Kiritimati` is already on local date `2026-05-02`
+- `Pacific/Honolulu` is still on local date `2026-05-01`
+
+If both businesses use a `06:00` operational boundary, the resolved bucket
+dates differ:
+
+- Kiritimati bucket date: `2026-05-01`
+- Honolulu bucket date: `2026-04-30`
+
+### Solution
+
+Resolve each business window in its own named IANA time zone:
+
+`(exact instant + target business zone + boundary rule) -> [start, end)`
+
+This prevents UTC-based mislabeling and keeps downstream reporting, exports,
+and reconciliation aligned with the region that actually owns the rule.
 
 ## What these use cases have in common
 

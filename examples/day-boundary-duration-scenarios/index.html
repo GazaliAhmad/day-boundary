@@ -3,12 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Day Boundary Duration Toy App</title>
+    <title>Duration Scenarios | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="Compare exact elapsed-time and local wall-clock duration semantics across DST-sensitive and non-DST time zones with day-boundary."
+    />
+    <meta name="theme-color" content="#0c1920" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-duration-scenarios/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="Duration Scenarios | day-boundary Examples" />
+    <meta
+      property="og:description"
+      content="Compare elapsed and wall-clock window endings across London, New York, Singapore, Sydney, and more."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-duration-scenarios/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Duration Scenarios | day-boundary Examples"
+    />
+    <meta
+      name="twitter:description"
+      content="Compare elapsed and wall-clock window endings across London, New York, Singapore, Sydney, and more."
+    />
     <script type="importmap">
       {
         "imports": {
-          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
-          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
         }
       }
     </script>
@@ -16,12 +46,26 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Day Boundary Duration Toy App</h1>
+      <h1>Day Boundary Duration Scenarios</h1>
       <p>
         This example compares two boundary-window duration interpretations in
         the same time zone: exact elapsed duration versus wall-clock scheduled
         duration.
       </p>
+
+      <div class="card">
+        <h2>Guided Tour</h2>
+        <p class="muted">
+          Use this page after the operational-day and DST pages when you want to
+          isolate one specific question: does this rule mean elapsed time or
+          local wall-clock schedule?
+        </p>
+        <p>
+          Start with <a href="../day-boundary-operational-day-demo/">Operational Day Demo</a>,
+          then review <a href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>,
+          or return to the <a href="../">Examples Tour</a>.
+        </p>
+      </div>
 
       <div class="card">
         <h2>Preset Scenarios</h2>
@@ -116,7 +160,7 @@
         compareWindowEndings,
         getWindowEndByElapsedDuration,
         getWindowEndByWallClockDuration,
-      } from '../../lib/day-boundary.js';
+      } from '../lib/day-boundary.js';
 
       const LOCATIONS = [
         {

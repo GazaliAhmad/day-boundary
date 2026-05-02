@@ -118,6 +118,35 @@ console.log(window.start.toString());
 console.log(window.end.toString());
 ```
 
+### Spring-forward gap example
+
+If a boundary falls on a local wall-clock time that does not exist, keep the
+policy explicit with `disambiguation`.
+
+Example in `America/New_York` on Sunday, March 8, 2026:
+
+- clocks jump from `01:59:59` to `03:00:00`
+- local `02:30` does not exist
+
+```js
+const strategy = new FixedTimeBoundaryStrategy({
+  timeZone: 'America/New_York',
+  boundaryTime: '02:30',
+  disambiguation: 'compatible',
+});
+
+const window = getWindowForInstant(
+  Temporal.Instant.from('2026-03-08T07:15:00Z'),
+  strategy
+);
+
+console.log(window.end.toString());
+// 2026-03-08T03:30:00-04:00[America/New_York]
+```
+
+Use `disambiguation: 'reject'` if your application should fail fast when a
+configured local boundary does not exist on that date.
+
 ## `DailyBoundaryStrategy`
 
 Use this when the boundary changes by date.
@@ -179,6 +208,38 @@ const zdt = Temporal.ZonedDateTime.from('2026-10-24T12:00:00+01:00[Europe/London
 const window = getWindowForZonedDateTime(zdt, strategy);
 ```
 
+### International Date Line example
+
+The same exact instant can resolve to different operational dates in different
+business zones. Do not derive bucket dates from UTC alone.
+
+```js
+const instant = Temporal.Instant.from('2026-05-01T10:30:00Z');
+
+const kiritimati = new FixedTimeBoundaryStrategy({
+  timeZone: 'Pacific/Kiritimati',
+  boundaryTime: '06:00',
+});
+
+const honolulu = new FixedTimeBoundaryStrategy({
+  timeZone: 'Pacific/Honolulu',
+  boundaryTime: '06:00',
+});
+
+const kiritimatiWindow = getWindowForInstant(instant, kiritimati);
+const honoluluWindow = getWindowForInstant(instant, honolulu);
+
+console.log(kiritimatiWindow.start.toPlainDate().toString());
+// 2026-05-01
+
+console.log(honoluluWindow.start.toPlainDate().toString());
+// 2026-04-30
+```
+
+This is expected. Resolve the boundary window in the zone that actually owns
+the business rule, then derive labels such as `Logical_Date` from that
+resolved window.
+
 ### `getWindowForPlainDateTime`
 
 Best when the user enters wall-clock local time.
@@ -189,6 +250,44 @@ const window = getWindowForPlainDateTime(localInput, strategy, {
   disambiguation: 'earlier',
 });
 ```
+
+### Fall-back ambiguity example
+
+On fall-back nights, the same local clock time can happen twice. Keep that
+choice explicit so two visually identical timestamps do not collapse into one.
+
+Example in `America/New_York` on Sunday, November 1, 2026:
+
+- local `01:30` occurs twice
+- `disambiguation: 'earlier'` means the first `01:30`
+- `disambiguation: 'later'` means the second `01:30`
+
+```js
+const strategy = new FixedTimeBoundaryStrategy({
+  timeZone: 'America/New_York',
+  boundaryTime: '01:45',
+  disambiguation: 'earlier',
+});
+
+const localInput = Temporal.PlainDateTime.from('2026-11-01T01:30:00');
+
+const firstWindow = getWindowForPlainDateTime(localInput, strategy, {
+  disambiguation: 'earlier',
+});
+
+const secondWindow = getWindowForPlainDateTime(localInput, strategy, {
+  disambiguation: 'later',
+});
+
+console.log(firstWindow.start.toString());
+// 2026-10-31T01:45:00-04:00[America/New_York]
+
+console.log(secondWindow.start.toString());
+// 2026-11-01T01:45:00-04:00[America/New_York]
+```
+
+This is how the library avoids silently treating repeated local times as one
+timestamp when payroll, attendance, or duration math depends on the difference.
 
 ## `getWindowProgress`
 
@@ -219,6 +318,16 @@ for (const group of grouped) {
   console.log(group.items.length);
 }
 ```
+
+If your reporting layer needs a business-facing bucket date, a common default is
+to derive it from the local date of `group.window.start`.
+
+Example:
+
+- boundary at `22:00`
+- event at `2026-05-02T01:00`
+- resolved window `2026-05-01T22:00 -> 2026-05-02T22:00`
+- default bucket date or `Logical_Date`: `2026-05-01`
 
 ## `getWindowId`
 

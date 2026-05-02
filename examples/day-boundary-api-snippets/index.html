@@ -3,12 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Day Boundary API Snippets</title>
+    <title>API Snippets | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="Browse focused day-boundary helper demos, including getWindowForZonedDateTime and isSameWindow, without a full scenario walkthrough."
+    />
+    <meta name="theme-color" content="#0c1920" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-api-snippets/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="API Snippets | day-boundary Examples" />
+    <meta
+      property="og:description"
+      content="Browse focused helper examples for existing zoned timestamps and same-window checks in the day-boundary API."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-api-snippets/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="API Snippets | day-boundary Examples" />
+    <meta
+      name="twitter:description"
+      content="Browse focused helper examples for existing zoned timestamps and same-window checks in the day-boundary API."
+    />
     <script type="importmap">
       {
         "imports": {
-          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
-          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
         }
       }
     </script>
@@ -20,12 +47,25 @@
         <p class="eyebrow">Examples</p>
         <h1>API Snippets</h1>
         <p class="lede">
-          Small, focused demos for public helpers that do not need a full toy app.
+          Small, focused demos for public helpers that do not need a full scenario page.
           This page covers resolving a window from an existing
           <span class="mono">Temporal.ZonedDateTime</span> and checking whether
           two exact instants land in the same operational window.
         </p>
       </header>
+
+      <section class="card stack">
+        <h2>Guided Tour</h2>
+        <p class="muted">
+          Use this page after the scenario demos when you only need the smaller
+          helper entry points.
+        </p>
+        <p>
+          Start with <a href="../day-boundary-operational-day-demo/">Operational Day Demo</a>,
+          continue with <a href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>,
+          or return to the <a href="../">Examples Tour</a>.
+        </p>
+      </section>
 
       <section class="card stack">
         <h2><span class="mono">getWindowForZonedDateTime</span></h2>
@@ -123,7 +163,7 @@ const window = getWindowForZonedDateTime(zdt, strategy);</code></pre>
         getWindowForInstant,
         getWindowId,
         isSameWindow,
-      } from '../../lib/day-boundary.js';
+      } from '../lib/day-boundary.js';
 
       const TIME_ZONE = 'Europe/London';
       const strategy = new FixedTimeBoundaryStrategy({

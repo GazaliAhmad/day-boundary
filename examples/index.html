@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>day-boundary Examples Tour</title>
+    <meta
+      name="description"
+      content="Explore the day-boundary examples tour: operational-day windows, DST critical cases, shifting boundaries, duration semantics, API snippets, and a Hijri Maghrib proof of concept."
+    />
+    <meta name="theme-color" content="#0c1920" />
+    <link rel="canonical" href="https://day-boundary.gazali.one/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="day-boundary Examples Tour" />
+    <meta
+      property="og:description"
+      content="Explore operational-day windows, DST edge cases, shifting boundaries, duration semantics, and dataset-backed calendar examples."
+    />
+    <meta property="og:url" content="https://day-boundary.gazali.one/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="day-boundary Examples Tour" />
+    <meta
+      name="twitter:description"
+      content="Explore operational-day windows, DST edge cases, shifting boundaries, duration semantics, and dataset-backed calendar examples."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">Examples Tour</p>
+        <h1>Start With The Right Boundary Problem</h1>
+        <p class="lede">
+          These example pages are organized as a guided tour. Start with the operational-day primitive. Then branch into DST failure modes, shifting per-date boundaries, or specialized scenarios.
+        </p>
+        <div class="hero-actions">
+          <a class="action-link" href="./day-boundary-operational-day-demo/">Operational Day Demo</a>
+          <a class="action-link" href="./day-boundary-dst-critical-cases/">DST Critical Cases</a>
+          <a class="action-link" href="./day-boundary-api-snippets/">API Snippets</a>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card card-featured">
+          <p class="card-kicker">Recommended First Stop</p>
+          <h2>Operational Day Demo</h2>
+          <p>
+            Start here if your real problem is “our business day does not start
+            at midnight.” This page covers stable window resolution, grouping,
+            and deriving a bucket date from <code>window.start</code>.
+          </p>
+          <a class="card-link" href="./day-boundary-operational-day-demo/">Open Operational Day Demo</a>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">Critical Cases</p>
+          <h2>DST Critical Cases</h2>
+          <p>
+            Go here when you need to reason about spring-forward gaps,
+            fall-back ambiguity, and elapsed-versus-wall-clock duration drift.
+          </p>
+          <a class="card-link" href="./day-boundary-dst-critical-cases/">Open DST Critical Cases</a>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>Start Here If...</h2>
+        <div class="tour-grid">
+          <article>
+            <h3>Midnight breaks your reporting</h3>
+            <p>Use the operational-day demo first.</p>
+            <a class="inline-link" href="./day-boundary-operational-day-demo/">Operational Day Demo</a>
+          </article>
+          <article>
+            <h3>DST is causing crashes or bad payroll math</h3>
+            <p>Use the DST page first.</p>
+            <a class="inline-link" href="./day-boundary-dst-critical-cases/">DST Critical Cases</a>
+          </article>
+          <article>
+            <h3>Your boundary changes by date</h3>
+            <p>Use the shifting-day demo.</p>
+            <a class="inline-link" href="./day-boundary-shifting-day-demo/">Shifting Day Demo</a>
+          </article>
+          <article>
+            <h3>You only need helper-level examples</h3>
+            <p>Use the API snippets page.</p>
+            <a class="inline-link" href="./day-boundary-api-snippets/">API Snippets</a>
+          </article>
+          <article>
+            <h3>You need duration semantics in isolation</h3>
+            <p>Use the duration scenarios page.</p>
+            <a class="inline-link" href="./day-boundary-duration-scenarios/">Duration Scenarios</a>
+          </article>
+          <article>
+            <h3>You need a dataset-backed non-midnight calendar</h3>
+            <p>Use the Hijri Maghrib proof of concept.</p>
+            <a class="inline-link" href="./day-boundary-hijri-poc/">Hijri Maghrib Boundary POC</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Suggested Tour Order</h2>
+        <ol class="tour-list">
+          <li><strong>Operational Day Demo</strong>: learn the main boundary-window primitive.</li>
+          <li><strong>DST Critical Cases</strong>: understand the high-risk clock-change failures.</li>
+          <li><strong>Shifting Day Demo</strong>: see a boundary that changes by date.</li>
+          <li><strong>Duration Scenarios</strong>: isolate elapsed-versus-wall-clock end semantics.</li>
+          <li><strong>API Snippets</strong>: review the smaller helper entry points.</li>
+          <li><strong>Hijri Maghrib Boundary POC</strong>: explore a dataset-backed, non-midnight calendar rule.</li>
+        </ol>
+      </section>
+    </main>
+  </body>
+</html>

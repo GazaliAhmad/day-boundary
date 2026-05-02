@@ -204,6 +204,102 @@ export function runDayBoundaryV3Tests(run) {
     assert.equal(durationHours(window), 25);
   });
 
+  run("v3 FixedTimeBoundaryStrategy resolves a skipped spring-forward boundary with compatible disambiguation", () => {
+    const strategy = new FixedTimeBoundaryStrategy({
+      timeZone: "America/New_York",
+      boundaryTime: "02:30",
+    });
+
+    const window = getWindowForInstant(
+      Temporal.Instant.from("2026-03-08T07:15:00Z"),
+      strategy,
+    );
+
+    assert.equal(
+      window.start.toString(),
+      "2026-03-07T02:30:00-05:00[America/New_York]",
+    );
+    assert.equal(
+      window.end.toString(),
+      "2026-03-08T03:30:00-04:00[America/New_York]",
+    );
+    assert.equal(durationHours(window), 24);
+    assert.equal(window.metadata.disambiguation, "compatible");
+  });
+
+  run("v3 FixedTimeBoundaryStrategy can fail fast on a skipped spring-forward boundary with reject disambiguation", () => {
+    const strategy = new FixedTimeBoundaryStrategy({
+      timeZone: "America/New_York",
+      boundaryTime: "02:30",
+      disambiguation: "reject",
+    });
+
+    assert.throws(
+      () => getWindowForInstant(Temporal.Instant.from("2026-03-08T07:15:00Z"), strategy),
+      RangeError,
+    );
+  });
+
+  run("v3 getWindowForPlainDateTime can distinguish repeated fall-back local times with earlier and later disambiguation", () => {
+    const strategy = new FixedTimeBoundaryStrategy({
+      timeZone: "America/New_York",
+      boundaryTime: "01:45",
+      disambiguation: "earlier",
+    });
+
+    const localInput = Temporal.PlainDateTime.from("2026-11-01T01:30:00");
+    const earlierWindow = getWindowForPlainDateTime(localInput, strategy, {
+      disambiguation: "earlier",
+    });
+    const laterWindow = getWindowForPlainDateTime(localInput, strategy, {
+      disambiguation: "later",
+    });
+
+    assert.equal(
+      earlierWindow.start.toString(),
+      "2026-10-31T01:45:00-04:00[America/New_York]",
+    );
+    assert.equal(
+      earlierWindow.end.toString(),
+      "2026-11-01T01:45:00-04:00[America/New_York]",
+    );
+    assert.equal(
+      laterWindow.start.toString(),
+      "2026-11-01T01:45:00-04:00[America/New_York]",
+    );
+    assert.equal(
+      laterWindow.end.toString(),
+      "2026-11-02T01:45:00-05:00[America/New_York]",
+    );
+    assert.notEqual(getWindowId(earlierWindow), getWindowId(laterWindow));
+  });
+
+  run("v3 can resolve the same instant to different operational dates across International Date Line zones", () => {
+    const instant = Temporal.Instant.from("2026-05-01T10:30:00Z");
+    const kiritimati = new FixedTimeBoundaryStrategy({
+      timeZone: "Pacific/Kiritimati",
+      boundaryTime: "06:00",
+    });
+    const honolulu = new FixedTimeBoundaryStrategy({
+      timeZone: "Pacific/Honolulu",
+      boundaryTime: "06:00",
+    });
+
+    const kiritimatiWindow = getWindowForInstant(instant, kiritimati);
+    const honoluluWindow = getWindowForInstant(instant, honolulu);
+
+    assert.equal(
+      kiritimatiWindow.start.toString(),
+      "2026-05-01T06:00:00+14:00[Pacific/Kiritimati]",
+    );
+    assert.equal(
+      honoluluWindow.start.toString(),
+      "2026-04-30T06:00:00-10:00[Pacific/Honolulu]",
+    );
+    assert.equal(kiritimatiWindow.start.toPlainDate().toString(), "2026-05-01");
+    assert.equal(honoluluWindow.start.toPlainDate().toString(), "2026-04-30");
+  });
+
   run("v3 helper entry points resolve the same window identity", () => {
     const strategy = new FixedTimeBoundaryStrategy({
       timeZone: "Europe/London",

@@ -3,12 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Day Boundary Toy App</title>
+    <title>Shifting Day Demo | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="Explore a date-dependent daily boundary that shifts over time and see how day-boundary groups events by the active operational window."
+    />
+    <meta name="theme-color" content="#09141b" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-shifting-day-demo/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="Shifting Day Demo | day-boundary Examples" />
+    <meta
+      property="og:description"
+      content="See a non-midnight operational day whose boundary changes by date instead of staying fixed every day."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-shifting-day-demo/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Shifting Day Demo | day-boundary Examples"
+    />
+    <meta
+      name="twitter:description"
+      content="See a non-midnight operational day whose boundary changes by date instead of staying fixed every day."
+    />
     <script type="importmap">
       {
         "imports": {
-          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
-          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
         }
       }
     </script>
@@ -16,10 +46,23 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Day Boundary Toy App</h1>
+      <h1>Day Boundary Shifting Day Demo</h1>
       <p>
         This example uses a shifting daily boundary instead of midnight.
       </p>
+
+      <div class="card stack">
+        <h2>Guided Tour</h2>
+        <p>
+          Use this page after the operational-day demo if your boundary changes
+          by date instead of staying fixed every day.
+        </p>
+        <div>
+          Start with <a href="../day-boundary-operational-day-demo/">Operational Day Demo</a>,
+          then compare with <a href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>,
+          or return to the <a href="../">Examples Tour</a>.
+        </div>
+      </div>
 
       <div class="card stack">
         <h2>Current status</h2>
@@ -59,7 +102,7 @@
         getWindowProgress,
         groupByWindow,
         getWindowId,
-      } from '../../lib/day-boundary.js';
+      } from '../lib/day-boundary.js';
 
       const TIME_ZONE = 'Asia/Singapore';
       const BASE_DATE = Temporal.PlainDate.from('2026-04-17');

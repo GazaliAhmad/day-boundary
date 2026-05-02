@@ -3,12 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Day Boundary Operational Day Demo</title>
+    <title>Operational Day Demo | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="See how day-boundary resolves an operational day that starts at 06:00, groups events into windows, and handles DST-aware duration differences."
+    />
+    <meta name="theme-color" content="#0b1b22" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-operational-day-demo/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="Operational Day Demo | day-boundary Examples" />
+    <meta
+      property="og:description"
+      content="Resolve exact timestamps into non-midnight operational windows and see how the same strategy drives grouping, labels, and DST-aware durations."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-operational-day-demo/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Operational Day Demo | day-boundary Examples"
+    />
+    <meta
+      name="twitter:description"
+      content="Resolve exact timestamps into non-midnight operational windows and see how the same strategy drives grouping, labels, and DST-aware durations."
+    />
     <script type="importmap">
       {
         "imports": {
-          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
-          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
         }
       }
     </script>
@@ -25,14 +55,18 @@
           <strong>Europe/London</strong> instead of midnight.
         </p>
         <div class="hero-actions">
-          <a class="action-link" href="../../guides/usage.html">Read usage guide</a>
-          <a class="action-link" href="../../guides/index.html">Read guides hub</a>
-          <a class="action-link" href="../../guides/api.html">Read API guide</a>
+          <a class="action-link" href="../">Examples Tour</a>
+          <a class="action-link" href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>
+          <a class="action-link" href="../day-boundary-shifting-day-demo/">Shifting Day Demo</a>
+          <a class="action-link" href="../day-boundary-duration-scenarios/">Duration Scenarios</a>
+          <a class="action-link" href="../day-boundary-api-snippets/">API Snippets</a>
         </div>
         <div class="callout">
           <strong>What this page covers:</strong> define one fixed-time strategy,
           resolve an exact timestamp into a window, group records by that window,
-          and compare elapsed versus wall-clock duration behavior across DST.
+          and derive a default bucket date from <code>window.start</code>.
+          For skipped times, repeated times, and DST duration drift, use the
+          dedicated DST critical-cases page.
         </div>
       </section>
 
@@ -67,8 +101,16 @@
               <div class="mono" id="resolve-end"></div>
             </div>
             <div>
+              <div class="fact-label">Bucket date</div>
+              <div class="mono" id="resolve-logical-date"></div>
+            </div>
+            <div>
               <div class="fact-label">Window ID</div>
               <div class="mono" id="resolve-id"></div>
+            </div>
+            <div>
+              <div class="fact-label">Rule</div>
+              <div class="mono">Logical_Date = window.start local date</div>
             </div>
             <div>
               <div class="fact-label">Metadata</div>
@@ -88,13 +130,16 @@
           </div>
           <p class="panel-copy">
             The same strategy can drive reports, exports, and dashboards without
-            duplicating boundary logic in caller code.
+            duplicating boundary logic in caller code. Events after midnight can
+            still map to the previous operational bucket when they land before
+            the next boundary.
           </p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>Resolved Window</th>
+                  <th>Bucket Date</th>
                   <th>Events</th>
                 </tr>
               </thead>
@@ -115,7 +160,9 @@
           <p class="panel-copy">
             During DST transitions, the same labeled duration can end at a
             different exact instant depending on whether the rule means elapsed
-            time or local wall-clock time.
+            time or local wall-clock time. This panel is a quick operational
+            reminder; the dedicated DST page goes deeper into skipped and
+            repeated local times.
           </p>
           <div class="fact-grid">
             <div>
@@ -152,6 +199,29 @@
             <span class="badge">Mental model</span>
           </div>
           <ol class="flow-list" id="flow-list"></ol>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Related Critical Cases</h2>
+            <span class="badge">Where to go next</span>
+          </div>
+          <p class="panel-copy">
+            This operational-day example covers the highest-frequency business
+            case: a workday that starts on a non-midnight boundary. The same
+            primitive also protects you from the most expensive clock-change
+            failures.
+          </p>
+          <ul class="flow-list">
+            <li>Negative offset or night shift: derive the business bucket date from <code>window.start</code>.</li>
+            <li>Spring-forward gap: choose whether a missing local boundary should resolve forward or fail fast.</li>
+            <li>Fall-back ambiguity: choose whether repeated local timestamps mean the earlier or later instant.</li>
+            <li>International Date Line: resolve labels in the owning business zone, not from UTC alone.</li>
+          </ul>
+          <div class="callout">
+            <strong>Next page:</strong>
+            <a class="action-link" href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>
+          </div>
         </article>
       </section>
     </main>

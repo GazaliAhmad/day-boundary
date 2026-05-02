@@ -10,7 +10,18 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
 
 ### Added
 
-- Added focused guides for DST and duration semantics and for the common v3 migration path.
+- Added focused guide coverage for the highest-risk operational boundary cases:
+  - overnight and negative-offset operational days with downstream `Logical_Date` derived from `window.start`
+  - skipped spring-forward local boundaries with explicit `disambiguation` policy
+  - repeated fall-back local timestamps with explicit `earlier` / `later` handling
+  - cross-zone calendar divergence near the International Date Line
+- Added focused regression tests covering:
+  - skipped spring-forward boundaries resolved with default `compatible` behavior
+  - fail-fast spring-forward handling with `disambiguation: 'reject'`
+  - repeated fall-back local timestamps resolved into different windows
+  - the same instant resolving to different operational dates across `Pacific/Kiritimati` and `Pacific/Honolulu`
+- Added a dedicated DST browser example page at `examples/day-boundary-dst-critical-cases/` covering spring-forward gaps, fall-back ambiguity, and elapsed-versus-wall-clock duration drift.
+- Added a self-contained publishable examples-site asset set under `examples/`, including vendored browser dependencies in `examples/vendor/`, local runtime copies in `examples/lib/`, dataset copies in `examples/data/`, and an `examples/favicon.svg` site icon.
 
 ### Changed
 
@@ -19,7 +30,17 @@ Note: the historical `1.0.0` section below documents the internal baseline for t
 - Made the README requirements more explicit around ESM-only usage, Temporal-only inputs, and rejection of legacy `Date`, string timestamp, and numeric timestamp inputs.
 - Pointed the local example flow at the operational-day demo as the best first browser example.
 - Added an explicit reference from `day-boundary` to [`time-window-classifier` (`twc`)](https://github.com/GazaliAhmad/time-window-classifier) as the companion reference CLI that demonstrates `day-boundary` on JSONL event data.
-- Updated `examples/README.md` and `guides/README.md` to match the new documentation flow.
+- Expanded the API, usage, and business-use-case guides so the operational-day primitive is documented explicitly for payroll, reconciliation, and cross-region reporting scenarios.
+- Updated the operational-day browser demo to surface the default bucket-date rule from `window.start` and to point readers to the dedicated DST critical-cases page.
+- Renamed browser examples to clearer, purpose-driven names:
+  - `examples/day-boundary-toy-app/` -> `examples/day-boundary-shifting-day-demo/`
+  - `examples/day-boundary-dst-toy-app/` -> `examples/day-boundary-dst-critical-cases/`
+  - `examples/day-boundary-duration-toy-app/` -> `examples/day-boundary-duration-scenarios/`
+- Updated `examples/README.md`, `guides/README.md`, `ROADMAP.md`, and in-page example navigation to match the renamed example set and the new documentation flow.
+- Reworked the `examples/` site so it can be published directly as a static website root, replacing repo-relative guide/home links with internal example navigation and rebasing browser imports and data fetches to stay inside the published `examples/` tree.
+- Added publish-facing page metadata across the examples site, including canonical URLs for `https://day-boundary.gazali.one/`, descriptions, Open Graph tags, Twitter summary tags, theme colors, and favicon references.
+- Fixed early text wrapping issues in the main landing page, API guide, and example pages so long hero copy wraps at the content edge instead of overflowing or breaking prematurely.
+- Fixed the Hijri Maghrib example so its CSV-backed browser demo loads from the self-contained `examples/data/` directory and reports the correct local asset path when those files are missing.
 
 ## [3.1.0] - 2026-05-01
 

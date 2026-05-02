@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DST Critical Cases | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="Walk through spring-forward gaps, fall-back ambiguity, and elapsed-versus-wall-clock duration drift with the current day-boundary API."
+    />
+    <meta name="theme-color" content="#1c1008" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-dst-critical-cases/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta property="og:title" content="DST Critical Cases | day-boundary Examples" />
+    <meta
+      property="og:description"
+      content="See how day-boundary handles missing local times, repeated timestamps, and duration drift across daylight saving transitions."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-dst-critical-cases/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="DST Critical Cases | day-boundary Examples"
+    />
+    <meta
+      name="twitter:description"
+      content="See how day-boundary handles missing local times, repeated timestamps, and duration drift across daylight saving transitions."
+    />
+    <script type="importmap">
+      {
+        "imports": {
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">Example Page</p>
+        <h1>DST Critical Cases</h1>
+        <p class="lede">
+          Daylight saving time is not just a display problem. It creates missing
+          local times, repeated local times, and duration drift that can break
+          payroll, reporting, and batch processing if boundary logic is vague.
+        </p>
+        <div class="hero-actions">
+          <a class="action-link" href="../">Examples Tour</a>
+          <a class="action-link" href="../day-boundary-operational-day-demo/">Operational Day Demo</a>
+          <a class="action-link" href="../day-boundary-duration-scenarios/">Duration Scenarios</a>
+          <a class="action-link" href="../day-boundary-api-snippets/">API Snippets</a>
+        </div>
+        <div class="callout">
+          <strong>What this page covers:</strong> the spring-forward gap, the
+          fall-back ambiguity, and elapsed-versus-wall-clock duration drift,
+          all using the current <code>day-boundary</code> API.
+        </div>
+        <div class="metric-row">
+          <article class="metric-card">
+            <div class="metric-label">Spring-forward gap</div>
+            <div class="metric-value">Crash risk</div>
+            <p>Configured local times can disappear.</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Fall-back ambiguity</div>
+            <div class="metric-value">Data corruption risk</div>
+            <p>The same wall-clock time can happen twice.</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Duration drift</div>
+            <div class="metric-value">Payroll risk</div>
+            <p>The same scheduled span can end at different exact instants.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Spring-Forward Gap</h2>
+            <div class="panel-actions">
+              <span class="badge badge-critical">Crash avoidance</span>
+              <button class="copy-button" data-copy-target="spring-code" type="button">Copy</button>
+            </div>
+          </div>
+          <p class="panel-copy">
+            On Sunday, March 8, 2026 in <code>America/New_York</code>, local
+            <code>02:30</code> does not exist. A fixed boundary at that time
+            needs an explicit policy rather than an implicit crash.
+          </p>
+          <div class="fact-grid">
+            <div>
+              <div class="fact-label">Configured boundary</div>
+              <div id="spring-boundary" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Reference instant</div>
+              <div id="spring-reference" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Resolved window start</div>
+              <div id="spring-start" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Resolved gap-day boundary</div>
+              <div id="spring-end" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Compatible policy</div>
+              <div id="spring-compatible" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Reject policy</div>
+              <div id="spring-reject" class="mono"></div>
+            </div>
+          </div>
+          <pre><code id="spring-code"></code></pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Fall-Back Ambiguity</h2>
+            <div class="panel-actions">
+              <span class="badge badge-warning">Identity protection</span>
+              <button class="copy-button" data-copy-target="fallback-code" type="button">Copy</button>
+            </div>
+          </div>
+          <p class="panel-copy">
+            On Sunday, November 1, 2026 in <code>America/New_York</code>, local
+            <code>01:30</code> happens twice. If you collapse those into one
+            timestamp, duration math can silently go wrong.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Policy</th>
+                  <th>Local timestamp</th>
+                  <th>Exact instant</th>
+                  <th>Resolved window</th>
+                </tr>
+              </thead>
+              <tbody id="fallback-table-body"></tbody>
+            </table>
+          </div>
+          <div class="fact-grid">
+            <div>
+              <div class="fact-label">Boundary rule</div>
+              <div id="fallback-boundary" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Different window IDs?</div>
+              <div id="fallback-window-check" class="mono"></div>
+            </div>
+          </div>
+          <pre><code id="fallback-code"></code></pre>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Duration Drift</h2>
+            <div class="panel-actions">
+              <span class="badge">Payroll semantics</span>
+              <button class="copy-button" data-copy-target="duration-code" type="button">Copy</button>
+            </div>
+          </div>
+          <p class="panel-copy">
+            An overnight shift can be eight actual elapsed hours or an
+            <code>00:00 -> 08:00</code> local wall-clock schedule. On a fall-back
+            night, those are not the same thing.
+          </p>
+          <div class="fact-grid">
+            <div>
+              <div class="fact-label">Start</div>
+              <div id="duration-start" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Requested duration</div>
+              <div id="duration-input" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Elapsed end</div>
+              <div id="duration-elapsed" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Wall-clock end</div>
+              <div id="duration-wallclock" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Same instant?</div>
+              <div id="duration-same" class="mono"></div>
+            </div>
+            <div>
+              <div class="fact-label">Difference</div>
+              <div id="duration-difference" class="mono"></div>
+            </div>
+          </div>
+          <pre><code id="duration-code"></code></pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>What To Lock Down</h2>
+            <span class="badge">Policy checklist</span>
+          </div>
+          <ol class="flow-list">
+            <li>Always require an explicit IANA time zone.</li>
+            <li>Choose a skipped-time policy for spring-forward boundaries: default resolution or fail fast.</li>
+            <li>Choose an ambiguous-time policy for repeated fall-back timestamps: <code>earlier</code> or <code>later</code>.</li>
+            <li>Keep window identity based on exact <code>start</code> and <code>end</code>, not wall-clock labels alone.</li>
+            <li>Decide whether your business rule means elapsed duration or wall-clock schedule before doing payroll math.</li>
+            <li>Derive reporting labels such as <code>Logical_Date</code> downstream from the resolved window, usually from <code>window.start</code>.</li>
+          </ol>
+          <div class="callout callout-soft">
+            <strong>Practical takeaway:</strong> DST bugs are not all the same.
+            Some crash a job immediately, some quietly corrupt timestamps, and
+            some distort shift duration. The library helps by forcing those
+            policies into the open.
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -73,10 +73,14 @@ h1 {
 
 h2 {
   font-size: 1.35rem;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 h3 {
   font-size: 1.05rem;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 .lede,
@@ -90,7 +94,7 @@ h3 {
   margin: 18px 0 0;
   max-width: none;
   font-size: 1rem;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .hero-actions {

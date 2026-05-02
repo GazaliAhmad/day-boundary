@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap reflects the current state of `day-boundary` in the `3.1.0` line.
+This roadmap reflects the current state of `day-boundary` in the `3.1.1` line.
 
 The library is now positioned as:
 
@@ -18,11 +18,16 @@ The repo currently includes:
 
 - a stable main API entry in [lib/day-boundary.js](./lib/day-boundary.js)
 - neutral boundary-window duration helpers in [lib/window-durations.js](./lib/window-durations.js)
-- a test suite covering boundary windows, DST-sensitive behavior, and duration semantics
+- a test suite covering boundary windows, DST-sensitive behavior, duration semantics, and cross-zone calendar divergence
 - explicit runtime migration guards for common legacy input shapes so older v1-style usage fails with targeted upgrade guidance
 - an explicit Node `18+` and ESM-only package contract
 - browser examples in [examples/](./examples/)
 - npm packaging metadata for the current `day-boundary` `3.x` line
+- focused guide coverage for:
+  - overnight and negative-offset operational days
+  - spring-forward skipped local boundaries
+  - fall-back repeated local timestamps
+  - International Date Line and cross-zone business-date divergence
 
 The published package surface is currently:
 
@@ -75,10 +80,10 @@ Legacy v1 artifacts may remain in the repository for historical context and migr
 The current example suite is:
 
 - [examples/day-boundary-operational-day-demo/index.html](./examples/day-boundary-operational-day-demo/index.html)
-- [examples/day-boundary-toy-app/index.html](./examples/day-boundary-toy-app/index.html)
+- [examples/day-boundary-shifting-day-demo/index.html](./examples/day-boundary-shifting-day-demo/index.html)
 - [examples/day-boundary-hijri-poc/index.html](./examples/day-boundary-hijri-poc/index.html)
-- [examples/day-boundary-dst-toy-app/index.html](./examples/day-boundary-dst-toy-app/index.html)
-- [examples/day-boundary-duration-toy-app/index.html](./examples/day-boundary-duration-toy-app/index.html)
+- [examples/day-boundary-dst-critical-cases/index.html](./examples/day-boundary-dst-critical-cases/index.html)
+- [examples/day-boundary-duration-scenarios/index.html](./examples/day-boundary-duration-scenarios/index.html)
 
 These examples currently validate:
 
@@ -86,28 +91,35 @@ These examples currently validate:
 - fixed daily boundaries
 - shifting per-date boundaries
 - dataset-backed window resolution
+- downstream bucket-date derivation from `window.start`
+- skipped local boundaries during spring-forward
+- repeated local timestamps during fall-back
 - DST-aware window duration behavior
 - global time-zone behavior
+- cross-zone business-date divergence across the International Date Line
 - elapsed-duration versus wall-clock boundary-window semantics
 
 ## Next Priorities
 
 The next phase should focus on hardening and conceptual clarity rather than growing the API too quickly.
 
-### 1. Event-centered documentation
+### 1. Primitive clarity and policy boundaries
 
-The docs should make the primitive unmistakable:
+The docs now cover the major failure modes. The next step is to keep the core
+primitive and downstream policy boundary unmistakable:
 
 - a boundary event opens or closes a window
 - a window is the span between two boundary events
 - duration helpers are one way to derive an end boundary
 - business labels are downstream policy
+- zone-specific business dates are downstream labels derived from resolved windows
 
 Focus areas:
 
-- make the event/window model more explicit in the guides
+- keep the event/window model explicit across README, guides, and demos
 - keep examples consistent with the neutral vocabulary
 - reduce lingering day-specific phrasing where it obscures the broader primitive
+- keep critical-case guidance aligned across docs, demos, and regression tests
 
 ### 2. Real-world example coverage
 
@@ -119,6 +131,7 @@ Good candidates:
 - factory process windows that overrun their planned end boundary
 - school or timetable windows with nested sub-windows
 - another dataset-backed example in a DST-sensitive region
+- a cross-region reporting example that compares the same instant in multiple business zones
 
 Promotion rule:
 
@@ -192,8 +205,9 @@ The documentation should continue to reinforce:
 - duration helpers are part of the boundary-window primitive
 - the library is a boundary engine, not a general date library
 - business policy belongs above the primitive
+- critical clock-change and cross-zone cases should be shown as explicit policy choices, not hidden implementation details
 
-The documentation structure should stay organized under [guides/](./guides/), with the main path centered on the guides hub, usage guide, API guide, and operational-day demo. Supporting material should remain available without competing with that main path.
+The documentation structure should stay organized under [guides/](./guides/), with the main path centered on the guides hub, usage guide, API guide, operational-day demo, and DST critical-cases page. Supporting material should remain available without competing with that main path.
 
 The documentation split should remain clear between:
 

@@ -1,7 +1,16 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
   --card-gap: 24px;
+  --bg: #08131a;
+  --bg-deep: #050d12;
+  --paper: rgba(13, 24, 31, 0.92);
+  --paper-strong: rgba(16, 29, 37, 0.98);
+  --ink: #edf6f4;
+  --muted: #a8c0bc;
+  --line: rgba(123, 224, 197, 0.14);
+  --accent: #7be0c5;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
 }
 
 body {
@@ -9,10 +18,10 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   background:
-    radial-gradient(circle at top left, #73b1ff33, transparent 28rem),
-    radial-gradient(circle at top right, #ffd77a22, transparent 24rem),
-    linear-gradient(180deg, #f5f7fb, #ebeff7);
-  color: #142033;
+    radial-gradient(circle at top left, rgba(75, 133, 209, 0.18), transparent 28rem),
+    radial-gradient(circle at top right, rgba(123, 224, 197, 0.12), transparent 24rem),
+    linear-gradient(180deg, #0c1920, var(--bg) 48%, var(--bg-deep));
+  color: var(--ink);
 }
 
 .wrap {
@@ -35,7 +44,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #35507a;
+  color: var(--accent);
 }
 
 h1,
@@ -51,25 +60,27 @@ h1 {
 
 h2 {
   margin-bottom: 8px;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 .lede,
 .muted {
-  color: #43546f;
+  color: var(--muted);
 }
 
 .lede {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .card {
   margin-bottom: 0;
   padding: 20px;
-  border: 1px solid #b8c3d94d;
+  border: 1px solid var(--line);
   border-radius: 18px;
-  background: #ffffffd9;
+  background: linear-gradient(180deg, var(--paper-strong) 0%, var(--paper) 100%);
   backdrop-filter: blur(8px);
-  box-shadow: 0 16px 40px #21304d12;
+  box-shadow: var(--shadow);
 }
 
 .stack > * + * {
@@ -88,7 +99,7 @@ h2 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #4d6185;
+  color: var(--accent);
 }
 
 .mono {
@@ -104,9 +115,9 @@ h2 {
 
 button {
   padding: 10px 14px;
-  border: 1px solid #8ba2c8;
+  border: 1px solid rgba(123, 224, 197, 0.2);
   border-radius: 999px;
-  background: #f7faff;
+  background: rgba(18, 34, 42, 0.9);
   color: inherit;
   cursor: pointer;
   transition:
@@ -117,20 +128,20 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  background: #ffffff;
-  box-shadow: 0 8px 20px #35507a14;
+  background: rgba(23, 43, 52, 0.98);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
 }
 
 .status {
   padding: 12px 14px;
   border-radius: 12px;
-  background: #edf3ff;
-  color: #284168;
+  background: rgba(18, 35, 45, 0.96);
+  color: #dce8ff;
 }
 
 .status[data-kind="false"] {
-  background: #fff0e5;
-  color: #8a4d16;
+  background: rgba(61, 34, 22, 0.98);
+  color: #ffd4af;
 }
 
 .snippet {
@@ -138,54 +149,13 @@ button:hover {
   overflow-x: auto;
   padding: 14px;
   border-radius: 14px;
-  background: #0f1726;
+  background: #0b121d;
   color: #e4edff;
+  border: 1px solid rgba(123, 224, 197, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background:
-      radial-gradient(circle at top left, #4e87d133, transparent 28rem),
-      radial-gradient(circle at top right, #c88d1b1f, transparent 24rem),
-      linear-gradient(180deg, #111723, #0b1119);
-    color: #edf3ff;
-  }
-
-  .eyebrow,
-  .label {
-    color: #9db5dd;
-  }
-
-  .lede,
-  .muted {
-    color: #b8c5dd;
-  }
-
-  .card {
-    background: #111a28d9;
-    border-color: #2d3c564f;
-    box-shadow: 0 16px 40px #00000045;
-  }
-
-  button {
-    background: #182335;
-    border-color: #4b628a;
-  }
-
-  button:hover {
-    background: #1f2d45;
-    box-shadow: 0 8px 20px #00000040;
-  }
-
-  .status {
-    background: #162339;
-    color: #dce8ff;
-  }
-
-  .status[data-kind="false"] {
-    background: #3b2413;
-    color: #ffd5ae;
-  }
+a {
+  color: var(--accent);
 }
 
 @media (max-width: 860px) {

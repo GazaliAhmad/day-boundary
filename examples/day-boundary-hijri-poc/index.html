@@ -3,12 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hijri Maghrib Boundary POC</title>
+    <title>Hijri Maghrib Boundary POC | day-boundary Examples</title>
+    <meta
+      name="description"
+      content="Explore a dataset-backed proof of concept where the active Hijri day changes at Maghrib instead of midnight, using day-boundary."
+    />
+    <meta name="theme-color" content="#09141b" />
+    <link
+      rel="canonical"
+      href="https://day-boundary.gazali.one/day-boundary-hijri-poc/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="day-boundary Examples" />
+    <meta
+      property="og:title"
+      content="Hijri Maghrib Boundary POC | day-boundary Examples"
+    />
+    <meta
+      property="og:description"
+      content="See a dataset-backed non-midnight calendar where the active day changes at Maghrib based on prayer and Hijri tables."
+    />
+    <meta
+      property="og:url"
+      content="https://day-boundary.gazali.one/day-boundary-hijri-poc/"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Hijri Maghrib Boundary POC | day-boundary Examples"
+    />
+    <meta
+      name="twitter:description"
+      content="See a dataset-backed non-midnight calendar where the active day changes at Maghrib based on prayer and Hijri tables."
+    />
     <script type="importmap">
       {
         "imports": {
-          "@js-temporal/polyfill": "../../node_modules/@js-temporal/polyfill/dist/index.esm.js",
-          "jsbi": "../../node_modules/jsbi/dist/jsbi.mjs"
+          "@js-temporal/polyfill": "../vendor/temporal-polyfill.esm.js",
+          "jsbi": "../vendor/jsbi.mjs"
         }
       }
     </script>
@@ -21,6 +54,20 @@
         This proof of concept uses the MUIS Hijri calendar together with daily
         Maghrib times. The active Hijri day changes at Maghrib, not midnight.
       </p>
+
+      <div class="card">
+        <h2>Guided Tour</h2>
+        <p>
+          This is the specialized, dataset-backed stop in the examples tour. Use
+          it after the main operational-day and DST pages once the core boundary
+          primitive already feels familiar.
+        </p>
+        <p>
+          Start with <a href="../day-boundary-operational-day-demo/">Operational Day Demo</a>,
+          review <a href="../day-boundary-dst-critical-cases/">DST Critical Cases</a>,
+          or return to the <a href="../">Examples Tour</a>.
+        </p>
+      </div>
 
       <div class="card">
         <h2>Controls</h2>
@@ -89,7 +136,7 @@
         getWindowForInstant,
         getWindowForPlainDateTime,
         getWindowProgress,
-      } from '../../lib/day-boundary.js';
+      } from '../lib/day-boundary.js';
 
       const DATASET_TIMEZONE_LABEL = 'Asia/Singapore';
       const ONE_MINUTE = 60 * 1000;
@@ -506,12 +553,12 @@
 
       async function loadData() {
         const [prayerResponse, hijriResponse] = await Promise.all([
-          fetch('../../data/MuslimPrayerTimetable2026.csv'),
-          fetch('../../data/muis_hijri_calendar_2026.csv'),
+          fetch('../data/MuslimPrayerTimetable2026.csv'),
+          fetch('../data/muis_hijri_calendar_2026.csv'),
         ]);
 
         if (!prayerResponse.ok || !hijriResponse.ok) {
-          throw new Error('Failed to load one or more CSV files from /data.');
+          throw new Error('Failed to load one or more CSV files from ../data/.');
         }
 
         const [prayerText, hijriText] = await Promise.all([

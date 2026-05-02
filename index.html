@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>day-boundary</title>
+    <link rel="stylesheet" href="./site.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">day-boundary</p>
+        <h1>Boundary Windows For Real Operational Days</h1>
+        <p class="lede">
+          Assign timestamps to operational windows when midnight breaks your
+          logic. Use <code>day-boundary</code> when reporting days, service
+          windows, shift cycles, or cutoffs do not align with the calendar day.
+        </p>
+        <div class="hero-actions">
+          <a class="action-link" href="./examples/">Examples Tour</a>
+          <a class="action-link" href="./guides/usage.html">Usage Guide</a>
+          <a class="action-link" href="./guides/api.html">API Guide</a>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <p class="card-kicker">Golden Path</p>
+          <h2>How Most Applications Use It</h2>
+          <ol class="list">
+            <li>Define a boundary strategy.</li>
+            <li>Resolve the surrounding <code>[start, end)</code> window for an exact timestamp.</li>
+            <li>Use <code>window.start</code> and <code>window.end</code> for querying, grouping, and reporting.</li>
+          </ol>
+          <p class="muted">
+            If you only start with one function, start with
+            <code>getWindowForInstant(...)</code>.
+          </p>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">Critical Cases</p>
+          <h2>What This Repo Covers Explicitly</h2>
+          <ul class="list">
+            <li>Non-midnight and overnight operational days</li>
+            <li>Spring-forward gaps and skipped local times</li>
+            <li>Fall-back ambiguity and repeated local timestamps</li>
+            <li>Elapsed versus wall-clock duration drift</li>
+            <li>Cross-zone business-date divergence near the International Date Line</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>Quick Start</h2>
+        <pre><code>import { Temporal } from '@js-temporal/polyfill';
+import { FixedTimeBoundaryStrategy, getWindowForInstant } from 'day-boundary';
+
+const strategy = new FixedTimeBoundaryStrategy({
+  timeZone: 'Europe/London',
+  boundaryTime: '09:00',
+});
+
+const window = getWindowForInstant(Temporal.Now.instant(), strategy);
+
+console.log(window.start.toString());
+console.log(window.end.toString());</code></pre>
+        <p class="muted">
+          This package is ESM-only and the typed API is Temporal-only.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <p class="card-kicker">Start Here</p>
+          <h2>Run The Guided Tour</h2>
+          <p class="muted">
+            The best first local path is the examples tour, starting with the
+            operational-day demo and then the DST critical-cases page.
+          </p>
+          <a class="inline-link" href="./examples/">Open Examples Tour</a>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">Read More</p>
+          <h2>Documentation Paths</h2>
+          <ul class="list">
+            <li><a class="inline-link" href="./guides/usage.html">Usage Guide</a></li>
+            <li><a class="inline-link" href="./guides/api.html">API Guide</a></li>
+            <li><a class="inline-link" href="./guides/functions-reference.html">Functions Reference</a></li>
+            <li><a class="inline-link" href="./guides/business-use-cases.html">Business Use Cases</a></li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
